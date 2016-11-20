@@ -31,13 +31,9 @@ $RECYCLE.BIN/
 # Thumbnails
 ._*
 
-# Files that might appear in the root of a volume
-.DocumentRevisions-V100
-.fseventsd
+# Files that might appear on external disk
 .Spotlight-V100
-.TemporaryItems
 .Trashes
-.VolumeIcon.icns
 
 # Directories potentially created on remote AFP share
 .AppleDB
@@ -45,3 +41,26 @@ $RECYCLE.BIN/
 Network Trash Folder
 Temporary Items
 .apdisk
+
+.c
+.txt
+.xls
+*.c
+*.txt
+*.xls
+*.rar
+*.cpp
+*.h
+*.pyc
+*.cfg
+*.zip
+*.exe
+*.pyd
+*.dll
+*.probe
+*.7z
+*.cfg_test
+*.xlsx
+*.bak
+两个标签的文件比较/result
+日志行统计/log
