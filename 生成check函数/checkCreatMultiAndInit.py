@@ -61,7 +61,7 @@ def GetMemberList(VarNameIn, VarStructName, structInstanceList):
     if structInstance:
         for linenum, VarName in enumerate(structInstance.VarNameList):
             if IsStructOrStructPoint(VarName):
-                memberList = GetMemberList(VarName, self.VarStructNameList[linenum], structInstanceList)
+                memberList = GetMemberList(VarName, structInstance.VarStructNameList[linenum], structInstanceList)
                 for member in memberList:
                     VarNameCode = VarNameIn + Link + member
                     memberListReturn.append(VarNameCode)
@@ -88,6 +88,7 @@ class StructClass(object):
         self.initFun =""             #未展开的init函数
         self.externfun = ""          #check函数的声明
         self.initFunExpand = ""      #展开的init函数
+        self.initPrint = ""          #init的print形式函数
         self.setStruName(code)       
         self.setVarNameList(code)
         self.setVarSource()
@@ -145,10 +146,14 @@ class StructClass(object):
                 else:
                     self.fun = self.fun + "    CHECK_EQUAL_TEXT(" + VarCheckName + ",  " + VarSourceName + ",  " + "\"" + VarSourceName + "\");\n"
         self.fun = self.fun + funEnd
-        
+
+    def getInitFunHead(self):
+        funString = "void " + getInitFunName(self.struNameHld) + "( )\n{\n"
+        funString = funString + "    " + self.struName + "  *" + self.VarSource + ";\n\n"
+        return funString
+
     def setInitFunExpand(self, structInstanceList):
-        self.initFunExpand = "void " + getInitFunName(self.struNameHld) + "( )\n{\n"
-        self.initFunExpand = self.initFunExpand + "    " + self.struName + "  *" + self.VarSource + ";\n\n"
+        self.initFunExpand = self.getInitFunHead()
         initCode = ""
         for linenum, VarName in enumerate(self.VarNameList):
             memberList = []
@@ -159,12 +164,24 @@ class StructClass(object):
                     initCode = initCode + "    " + VarSourceName + member + " = ;\n"
             else:
                 initCode = initCode + "    " + VarSourceName + VarName + " = ;\n"
-        #for line in initCode:
         self.initFunExpand = self.initFunExpand + initCode + funEnd
+    
+    def setInitPrint(self, structInstanceList):
+        self.initPrint = getInitFunHead(self)
+        initCode = ""
+        for linenum, VarName in enumerate(self.VarNameList):
+            memberList = []
+            VarSourceName = self.VarSource + "->"
+            if IsStructOrStructPoint(VarName):
+                memberList = GetMemberList(VarName, self.VarStructNameList[linenum], structInstanceList)
+                for member in memberList:
+                    initCode = initCode + "    " + VarSourceName + member + " = ;\n"
+            else:
+                initCode = initCode + "    " + VarSourceName + VarName + " = ;\n"
+        self.initPrint = self.initPrint + initCode + funEnd
 
     def setInitFun(self):
-        self.initFun = "void " + getInitFunName(self.struNameHld) + "( )\n{\n"
-        self.initFun = self.initFun + "    " + self.struName + "  *" + self.VarSource + ";\n"
+        self.initFun = self.getInitFunHead()
         for linenum, VarName in enumerate(self.VarNameList):
             VarryObject = re.search(r'([\w|_]+)\[([\w|_]+)\]', VarName)
             if VarryObject:
@@ -201,7 +218,6 @@ for headFile in fileList:
     fileFunCheck = open("check_" + funFileName + ".cpp",'w')
     fileFunInit = open("Init_" + funFileName + ".cpp",'w')
     fileFunExtern = open("check_" + funFileName + ".h",'w')
-
     fileDefStr = fileDef.read()
     codeList = splitStructCode(fileDefStr)
     structInstanceList = []
