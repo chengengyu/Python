@@ -75,10 +75,12 @@ successCC = 0
 checkoutCommand = 'cleartool checkout -nc '
 checkoutByBranchCommond = checkoutCommand + '-branch {branchName} '
 lsCoCommand = 'cleartool lsco -cview -rec '
-rmlableCommand = 'cleartool rmlable {lableName} '
-findNoBranchFileCommand = 'cleartool find . –element \'lbtype({lableName}) && (!brtype({branchName}))\' –print'
-mkbranchCommand = 'cleartool mkbranch -nco -nc {branchName} {pathName}@@\{baseLableName}'
 
+#待验证命令
+rmlableCommand = 'cleartool rmlable {lableName} {pathName}'
+mkbranchCommand = 'cleartool mkbranch -nco -nc {branchName} {pathName}'
+findNoBranchFileCommand = 'cleartool find . -element \"{!brtype({branchName}) && lbtype_sub({srcLabelName})}\" -version \"lbtype({baseLableName})\" -print>{tmpFile}'
+mkLableCommand = 'cleartool mklabel -rep {lableName} {pathName}'
 
 #根据路径递归查找文件，并将文件名相同文件找出
 def findFiles(fileDir, filterRe):
@@ -109,7 +111,7 @@ def getGitStatus(fileDir):
 def cc2Git(pathConfig):
     log = open('log_cc2git.txt', 'w')
     gitStatus = ''
-
+    
     for config in pathConfig:
         logerr = ''
         ccDir = config['ccDir']
@@ -148,20 +150,30 @@ def findCheckOut(fileDir):
     return output.read()
 
 #拉分支
-def makeBrach(fileList, brName, baseName):
-    fileListMkbrSucc = []
-    fileListMkbrFail = []
-    fileListHaveBr = []
+def makeBrach(fileList, brName, baseName, tempLable):
+    logerr = ''
+    tmpFile = 'tempFile.txt'
+    for file in fileList: 
+        mkLable = mkLableCommand.format(lableName=tempLable, pathName=file)
+        if successCC != os.system(mkLable):
+            logerr += '打标签失败' + file + '\n'
+    os.remove(tmpFile)
+    findFile = findNoBranchFileCommand.format(branchName=brName, srcLabelName=tempLable, baseLableName=baseName, tmpFile=tmpFile)
+    if successCC != os.system(findFile):
+        logerr += '查找失败' + brName + tempLable + baseName + tmpFile + '\n'
+    fp = open(tmpFile, 'r')
+    for line in fp:
+        mkbr = mkbranchCommand.format(pathName=line, branchName=brName)
+        if successCC != os.system(mkbr):
+            logerr += '拉分支失败' + line + '\n'
     for file in fileList:
-        mkbranchCommand.format(baselableName=baseName, pathName=fileList, branchName=brName)
-        if successCC != os.system(mkbranchCommand):
-            fileListMkbrFail.append(file)
-        else:
-            fileListMkbrSucc.append(file)
-    return fileListMkbrSucc, fileListMkbrFail, fileListHaveBr
+        rmLable = rmlableCommand.format(lableName=tempLable, pathName=file)
+        if successCC != os.system(rmLable):
+            logerr += '删除标签失败' + file + '\n'
+    return logerr
 
 #git向CC同步
-def git2CC(pathConfig, brName='', baseName=''):
+def git2CC(pathConfig, brName='', baseName='', tempLable=''):
     log = open('log_git2cc.txt', 'w')
     checkoutFile = ''
 
@@ -188,10 +200,7 @@ def git2CC(pathConfig, brName='', baseName=''):
                 logerr += '此文件只存在于git，cc不存在，请手动入库：' + key + '\n'
         cleartoolCommand = ''
         if type == 'mkbranch':
-            result = makeBrach(fileListDiff, brName, baseName)
-            fileListMkbrSucc = result[0]
-            fileListMkbrFail = result[1]
-            fileListHaveBr = result[2]
+            logerr += makeBrach(fileListDiff, brName, baseName, tempLable)
             cleartoolCommand = checkoutByBranchCommond.format(branchName=brName)
         else:
             cleartoolCommand = checkoutCommand
@@ -253,8 +262,9 @@ def execSync():
         if order == 'A':
             brName = input('请输入分支名：')
             baseName = input('请输入基线名：')
+            tempLable = input('请输入临时标签名: ')
             print('拉分支\n')
-            git2CC(pathConfigHlFile, brName=brName, baseName=baseName)
+            git2CC(pathConfigHlFile, brName=brName, baseName=baseName, tempLable=tempLable)
         elif order == 'B':
             print('不拉分支\n')
             git2CC(pathConfigHlFile)
@@ -313,6 +323,7 @@ def compareCcGit(configList):
     listWriteInLog(fileListDiff, log, '差异文件')
     listWriteInLog(fileListOnlyInCc, log, '只存在于CC的文件')
     listWriteInLog(fileListOnlyInGit, log, '只存在于GIT的文件')
+    log.close()
     return
 
 #处理分支选择
