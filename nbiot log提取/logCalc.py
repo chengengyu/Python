@@ -46,6 +46,11 @@ def calcRu(itemList):
         itemList[7] = 'error'
     return itemList
 
+def calcRsrp(itemList):
+    itemList[4] -= 140
+    return itemList    
+
+
 #DL: DCIN1, agglvl=2, cce=0, rep=1
 #DL: PDSCH_CFG(429,2), bufferidx 0, newdataflag 1, rep 1, tti 3, mcs 12, tbsize 680, rnti 1261
 #prach config,usCellId23,usSubframeOffset0,ucNInit5,ucNStart12,ucPreambleFormat0,usRepeatNum2
@@ -99,7 +104,7 @@ configList = \
     're': snrRe,\
     'comment': ['file', 'time', 'type', 'snr', 'rsrp', 'pci'],\
     'num': 5,\
-    'fun': funNull,\
+    'fun': calcRsrp,\
     'sheetName': 'snr'\
     },\
     {\
@@ -124,9 +129,9 @@ class itemClass(object):
         self.itemList = []
         self.itemList.append(fileName)
         for i in range(1, num+1):
-            if re.search('0x', serResult.group(i)):
+            if re.search(r'0x', serResult.group(i)):
                 self.itemList.append(serResult.group(i))
-            elif re.match('\d+', serResult.group(i)):
+            elif re.match(r'-?\d+', serResult.group(i)):
                 self.itemList.append(int(serResult.group(i)))
             else:
                 self.itemList.append(serResult.group(i))
