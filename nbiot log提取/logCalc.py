@@ -325,6 +325,40 @@ def calcAccessTime(fileDir):
     writeTimeXls(timeTypeClassInsList, fileDir + '\\TimeResult')
     print('时延计算成功\n')
 
+totalConfig = \
+[\
+    {\
+    're': ndciRe,\
+    'setFun':\
+    },\
+    {\
+    're': npdschRe,\
+    'setFun':\
+    },\
+    {
+    're': nprachRe,\
+    'setFun':\
+    },\
+    {
+    're': npuschRe,\
+    'setFun':\    
+    },\
+    {
+    're': snrRe,\
+    'setFun':\    
+    },\
+    {
+    're': throughPutRe,\
+    'setFun':\    
+    },\
+    {
+    're': crcRe,\
+    'setFun':\    
+    }\
+]
+
+
+
 class totalClass(object):
     def __init__(self):
         self.type = ''
@@ -350,15 +384,17 @@ class totalClass(object):
                     'NPUSCH_mcs/res': '',\
                     'NPUSCH_req': '',\
                     'NPUSCH_transLen': '',\
-                    'NPUSCH_ru': '',\
                     'SNR_type': '',\
                     'SNR_snr': '',\
                     'SNR_rsrp': '',\
                     'SNR_pci': '',\
                     'THROUGH_ul(bps)': '',\
                     'THROUGH_dl(bps)': '',\
+                    'CRC_dlTotal': '',\
+                    'CRC_dlCorrect': '',\
+                    'CRC_ulTotal': '',\
+                    'CRC_ulNew': ''\
                     }
-        self.
 
 
 if __name__ == "__main__":
