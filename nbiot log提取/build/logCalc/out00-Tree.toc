@@ -1,0 +1,7 @@
+('c:\\python34\\lib\\site-packages\\xlwt-1.2.0-py3.4.egg',
+ None,
+ {'*.py', '*.pyd', '*.so', '*.pyo', 'EGG-INFO', '*.pyc'},
+ 'DATA',
+ [('xlwt\\excel-formula.g',
+   'c:\\python34\\lib\\site-packages\\xlwt-1.2.0-py3.4.egg\\xlwt\\excel-formula.g',
+   'DATA')])
