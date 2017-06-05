@@ -15,33 +15,33 @@ def funNull(itemList):
     return itemList
 
 def calcThroughPut(itemList):
-    itemList[1] = int(itemList[1]) * 4
     itemList[2] = int(itemList[2]) * 4
+    itemList[3] = int(itemList[3]) * 4
     return itemList
 
 def calcCrc(itemList):
-    if int(itemList[1]) == 0:
+    if int(itemList[2]) == 0:
         dlCrc = 0
     else:
-        dlCrc = (1 - (int(itemList[2]) / int(itemList[1])))
-    if int(itemList[3]) == 0:
+        dlCrc = (1 - (int(itemList[3]) / int(itemList[2])))
+    if int(itemList[4]) == 0:
         ulCrc = 0
     else:
-        ulCrc = (1 - (int(itemList[4]) / int(itemList[3])))
+        ulCrc = (1 - (int(itemList[5]) / int(itemList[4])))
     itemList.append(dlCrc)
     itemList.append(ulCrc)
     return itemList
 
 def calcRu(itemList):
     itemList.append(0)
-    if int(itemList[3]) == 1:
-        itemList[7] = int(itemList[6])
-    elif int(itemList[3]) == 3:
-        itemList[7] = int(itemList[6]) / int(itemList[5]) * 4
-    elif int(itemList[3]) == 6:
-        itemList[7] = int(itemList[6]) / int(itemList[5]) * 2
+    if int(itemList[4]) == 1:
+        itemList[8] = int(itemList[7])
+    elif int(itemList[4]) == 3:
+        itemList[8] = int(itemList[7]) / int(itemList[6]) * 4
+    elif int(itemList[4]) == 6:
+        itemList[8] = int(itemList[7]) / int(itemList[6]) * 2
     elif int(itemList[3]) == 12:
-        itemList[7] = int(itemList[6]) / int(itemList[5]) * 1
+        itemList[8] = int(itemList[7]) / int(itemList[6]) * 1
     else:
         itemList[7] = 'error'
     return itemList
@@ -125,7 +125,7 @@ class itemClass(object):
         self.itemList.append(fileName)
         for i in range(1, num+1):
             if re.search('0x', serResult.group(i)):
-                self.itemList.append(int(serResult.group(i), 16))
+                self.itemList.append(serResult.group(i))
             elif re.match('\d+', serResult.group(i)):
                 self.itemList.append(int(serResult.group(i)))
             else:
