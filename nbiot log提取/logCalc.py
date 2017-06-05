@@ -355,6 +355,8 @@ class totalClass(object):
                     'SNR_snr': '',\
                     'SNR_rsrp': '',\
                     'SNR_pci': '',\
+                    'THROUGH_ul(bps)': '',\
+                    'THROUGH_dl(bps)': '',\
                     }
         self.
 
