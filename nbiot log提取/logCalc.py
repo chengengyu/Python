@@ -57,52 +57,60 @@ def calcRu(itemList):
 
 timeRe = r'\d+ 0x\w+ (0x\w+) 0x\w+ 0x\w+ \w+ +'
 
+ndciRe = timeRe + r'DL: DCIN(\d), agglvl=(\d), cce=(\d), rep=(\d)'
+npdschRe = timeRe + r'DL: PDSCH_CFG\(\d+,\d+\), bufferidx \d+, newdataflag (\d+), rep (\d+), tti (\d+), mcs (\d+), tbsize (\d+), rnti \d+'
+nprachRe = timeRe + r'prach config,usCellId\d+,usSubframeOffset\d+,ucNInit\d+,ucNStart\d+,ucPreambleFormat(\d+),usRepeatNum(\d+)'
+npuschRe = timeRe + r'NL1C_UL: PUSCH CFG enable\(\d+, \d+\): ucPuschFormat = (\d+), ucSubcarrierSpacing = (\d+), ucSubcarrierNum = (\d+), ucSubcarrierAllocIdx = \d+, (?:MCS|RES) index = (\d+), ucRepeatNum = (\d+), usTransLen = (\d+)'
+snrRe = timeRe + r'NL1C_DL (MIB|)SNR (\d+), (?:Serving|MIB)RSRP (\d+), PCI (\d+)'
+throughPutRe = timeRe + r'\[EMAC\]\[0\] +(\d+), +\d+, +\d+, +(\d+), +\d+, +\d+, +\d+'
+crcRe = timeRe + r'NL1C DL Total: (\d+), CRC (\d+), TP\(bits\) \d+, ACK \d+, New \d+, UL Total (\d+), New (\d+), TP \d+\(bits\)'
+
 configList = \
 [\
     {\
-    're': timeRe + r'DL: DCIN(\d), agglvl=(\d), cce=(\d), rep=(\d)',\
+    're': ndciRe,\
     'comment': ['file', 'time', 'DICN', 'agglvl', 'cce', 'rep'],\
     'num': 5,\
     'fun': funNull,\
     'sheetName': 'npdcch'\
     },\
     {\
-    're': timeRe + r'DL: PDSCH_CFG\(\d+,\d+\), bufferidx \d+, newdataflag (\d+), rep (\d+), tti (\d+), mcs (\d+), tbsize (\d+), rnti \d+',\
+    're': npdschRe,\
     'comment': ['file', 'time', 'newdataflag', 'rep', 'tti', 'mcs', 'tbsize'],\
     'num': 6,\
     'fun': funNull,\
     'sheetName': 'npdsch'\
     },\
     {\
-    're': timeRe + r'prach config,usCellId\d+,usSubframeOffset\d+,ucNInit\d+,ucNStart\d+,ucPreambleFormat(\d+),usRepeatNum(\d+)',\
+    're': nprachRe,\
     'comment': ['file', 'time', 'Format', 'rep'],\
     'num': 3,\
     'fun': funNull,\
     'sheetName': 'nprach'\
     },\
     {\
-    're': timeRe + r'NL1C_UL: PUSCH CFG enable\(\d+, \d+\): ucPuschFormat = (\d+), ucSubcarrierSpacing = (\d+), ucSubcarrierNum = (\d+), ucSubcarrierAllocIdx = \d+, (?:MCS|RES) index = (\d+), ucRepeatNum = (\d+), usTransLen = (\d+)',\
+    're': npuschRe,\
     'comment': ['file', 'time', 'Format', 'SubcarrierSpacing', 'SubcarrierNum', 'MCS/RES', 'rep', 'transLen', 'ru'],\
     'num': 7,\
     'fun': calcRu,\
     'sheetName': 'npusch'\
     },\
     {\
-    're': timeRe + r'NL1C_DL (MIB|)SNR (\d+), (?:Serving|MIB)RSRP (\d+), PCI (\d+)',\
+    're': snrRe,\
     'comment': ['file', 'time', 'type', 'snr', 'rsrp', 'pci'],\
     'num': 5,\
     'fun': funNull,\
     'sheetName': 'snr'\
     },\
     {\
-    're': timeRe + r'\[EMAC\]\[0\] +(\d+), +\d+, +\d+, +(\d+), +\d+, +\d+, +\d+',\
+    're': throughPutRe,\
     'comment': ['file', 'time', 'ul(bps)', 'dl(bps)'],\
     'num': 3,\
     'fun': calcThroughPut,\
     'sheetName': 'throughPut'\
     },\
     {\
-    're': timeRe + r'NL1C DL Total: (\d+), CRC (\d+), TP\(bits\) \d+, ACK \d+, New \d+, UL Total (\d+), New (\d+), TP \d+\(bits\)',\
+    're': crcRe,\
     'comment': ['file', 'time', 'dl total', 'dl crc正确', 'ul total', 'ul new', 'dl误码率', 'ul误码率'],\
     'num': 5,\
     'fun': calcCrc,\
@@ -189,7 +197,7 @@ def convertLog(fileDir):
                         typeIns.itemInsList.append(itemIns)
         except Exception as e:
             logErr.write(str(e))
-            err = "无法解析的行: 文件为" + file + ":" + str(line) + '\n'
+            err = "ErrLine: 文件为" + file + ":" + str(line) + '\n'
             logErr.write(err)
     writeXls(typeClassInsList, fileDir + '\\logResult')
     print('统计处理成功\n')
@@ -316,6 +324,39 @@ def calcAccessTime(fileDir):
             logErr.write(err)
     writeTimeXls(timeTypeClassInsList, fileDir + '\\TimeResult')
     print('时延计算成功\n')
+
+class totalClass(object):
+    def __init__(self):
+        self.type = ''
+        self.data = {
+                    'file': '',\
+                    'sn': '',\
+                    'timeHec': '0xffffffff',\
+                    'time': 0,\
+                    'CCE_dcin': '',\
+                    'CCE_agglvl': '',\
+                    'CCE_cce': '',\
+                    'CCE_req': '',\
+                    'NPDSCH_newDataFlag': '',\
+                    'NPDSCH_req': '',\
+                    'NPDSCH_tti': '',\
+                    'NPDSCH_mcs': '',\
+                    'NPDSCH_tbsize': '',\
+                    'NPRACH_format': '',\
+                    'NPRACH_req': '',\
+                    'NPUSCH_format': '',\
+                    'NPUSCH_subCarrierSpace': '',\
+                    'NPUSCH_subCarrierNum': '',\
+                    'NPUSCH_mcs/res': '',\
+                    'NPUSCH_req': '',\
+                    'NPUSCH_transLen': '',\
+                    'NPUSCH_ru': '',\
+                    'SNR_type': '',\
+                    'SNR_snr': '',\
+                    'SNR_rsrp': '',\
+                    'SNR_pci': '',\
+                    }
+        self.
 
 
 if __name__ == "__main__":
