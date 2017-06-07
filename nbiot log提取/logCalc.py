@@ -11,6 +11,26 @@ import shutil
 import math
 import xlwt
 
+def getFileName(fileDir, fileName):
+    result = re.search(r'.+\\(.+?)$', fileDir)
+    if result:
+        return result.group(1) + fileName
+    else:
+        return fileName
+
+#根据路径递归查找文件，并将文件名相同文件找出
+def findFiles(fileDir):
+    fileList = []
+    fileNamefp = open('fileName.txt', 'w')
+    for root, dirs, files in os.walk(fileDir):
+        if files:
+            for name in files:
+                if re.search('\.tra\.txt$', name):
+                    fileList.append(name)
+                    fileNamefp.write(name+'\n')
+    fileNamefp.close
+    return fileList
+
 commonFile = 3
 
 def funNull(itemList):
@@ -59,8 +79,10 @@ def calcRsrp(itemList):
 #NL1C_DL SNR 22, ServingRSRP 93, PCI 23
 #NL1C_DL MIBSNR 21, MIBRSRP 93, PCI 23
 #NL1C_UL: PUSCH CFG enable(109, 3): ucPuschFormat = 1, ucSubcarrierSpacing = 1, ucSubcarrierNum = 1, ucSubcarrierAllocIdx = 11, MCS index = 10, ucRepeatNum = 1, usTransLen = 32
+#NL1C_UL: usTbSize = 616, ucRuNum = 4, RuLth(slotNum) = 16, NewTxFlag = 1
 #[EMAC][0]           0,           0,           0,           0,           0,           0,           0  (备注第一个数字和第4个数字分别是上行和下行速率，2s统计，单位byte)
 #NL1C DL Total: 2, CRC 2, TP(bits) 1360, ACK 2, New 3, UL Total 3, New 3, TP 376(bits)
+#SYS: Set TX RF power 23  
 
 timeRe = r'\d+ (0x\w+) (0x\w+) 0x\w+ 0x\w+ \w+ +'
 
@@ -95,6 +117,13 @@ configList = \
     'sheetName': 'npusch'\
     },\
     {\
+    're': timeRe + r'NL1C_UL: usTbSize = (\d+), ucRuNum = (\d+), RuLth\(slotNum\) = (\d+), NewTxFlag = (\d+)',\
+    'comment': ['file', 'sn', 'time', 'tbSize', 'ruNum', 'ruLth', 'NewTx'],\
+    'num': 6,\
+    'fun': funNull,\
+    'sheetName': 'npusch_tb'\
+    },\
+    {\
     're': timeRe + r'NL1C_DL (MIB|)SNR (-?\d+), (?:Serving|MIB)RSRP (\d+), PCI (\d+)',\
     'comment': ['file', 'sn', 'time', 'type', 'snr', 'rsrp', 'pci'],\
     'num': 6,\
@@ -114,6 +143,13 @@ configList = \
     'num': 6,\
     'fun': calcCrc,\
     'sheetName': 'crc'\
+    },\
+    {\
+    're': timeRe + r'SYS: Set TX RF power (\d+)',\
+    'comment': ['file', 'sn', 'time', 'TX RF power'],\
+    'num': 3,\
+    'fun': funNull,\
+    'sheetName': 'UL POWER'\
     }\
 ]
 
@@ -138,20 +174,6 @@ class typeClass(object):
         self.calcFun = fun
         self.itemInsList = []
         self.sheetName = sheetName
-
-
-#根据路径递归查找文件，并将文件名相同文件找出
-def findFiles(fileDir):
-    fileList = []
-    fileNamefp = open('fileName.txt', 'w')
-    for root, dirs, files in os.walk(fileDir):
-        if files:
-            for name in files:
-                if re.search('\.tra\.txt$', name):
-                    fileList.append(name)
-                    fileNamefp.write(name+'\n')
-    fileNamefp.close
-    return fileList
 
 def typeClassListInit():
     typeClassInsList = []
@@ -198,7 +220,8 @@ def convertLog(fileDir):
             logErr.write(str(e))
             err = "无法解析的行: 文件为" + file + ":" + str(line) + '\n'
             logErr.write(err)
-    writeXls(typeClassInsList, fileDir + '\\logResult')
+    fileName = getFileName(fileDir, 'logResult')
+    writeXls(typeClassInsList, fileDir + '\\' + fileName)
     print('统计处理成功\n')
 
 serviceRe = timeRe + r'.(CONTROL_PLANE_SERVICE_REQ|EMM_ATTACH_REQUEST)'
@@ -307,6 +330,7 @@ def writeTimeXls(typeClassInsList, fileName):
                 sheet.write(row, 4, eachitem.diffList2[num])
     wb.save(fileName + '.xls')
 
+
 def calcAccessTime(fileDir):
     logErr = open('logErrAccess.txt', 'w')
     fileList = findFiles(fileDir)
@@ -321,7 +345,8 @@ def calcAccessTime(fileDir):
             logErr.write(str(e))
             err = "\n errLine: 文件为" + file + ":" + str(line) + '\n'
             logErr.write(err)
-    writeTimeXls(timeTypeClassInsList, fileDir + '\\TimeResult')
+    fileName = getFileName(fileDir, 'TimeResult')
+    writeTimeXls(timeTypeClassInsList, fileDir + '\\' + fileName)
     print('时延计算成功\n')
 
 

@@ -66,3 +66,8 @@ Temporary Items
 日志行统计/log
 第一版/hand
 *.spec
+*.manifest
+*.manifest
+*.toc
+*.pyz
+*.pkg
