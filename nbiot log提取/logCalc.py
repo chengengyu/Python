@@ -11,43 +11,65 @@ import shutil
 import math
 import xlwt
 
+def getFileName(fileDir, fileName):
+    result = re.search(r'.+\\(.+?)$', fileDir)
+    if result:
+        return result.group(1) + fileName
+    else:
+        return fileName
+
+#根据路径递归查找文件，并将文件名相同文件找出
+def findFiles(fileDir):
+    fileList = []
+    fileNamefp = open('fileName.txt', 'w')
+    for root, dirs, files in os.walk(fileDir):
+        if files:
+            for name in files:
+                if re.search('\.tra\.txt$', name):
+                    fileList.append(name)
+                    fileNamefp.write(name+'\n')
+    fileNamefp.close
+    return fileList
+
+commonFile = 3
+
 def funNull(itemList):
     return itemList
 
 def calcThroughPut(itemList):
-    itemList[2] = int(itemList[2]) * 4
-    itemList[3] = int(itemList[3]) * 4
+    itemList[commonFile] = int(itemList[commonFile]) * 4
+    itemList[commonFile+1] = int(itemList[commonFile+1]) * 4
     return itemList
 
 def calcCrc(itemList):
-    if int(itemList[2]) == 0:
+    if int(itemList[commonFile]) == 0:
         dlCrc = 0
     else:
-        dlCrc = (1 - (int(itemList[3]) / int(itemList[2])))
-    if int(itemList[4]) == 0:
+        dlCrc = (1 - (int(itemList[commonFile+1]) / int(itemList[commonFile])))
+    if int(itemList[commonFile+2]) == 0:
         ulCrc = 0
     else:
-        ulCrc = (1 - (int(itemList[5]) / int(itemList[4])))
+        ulCrc = (1 - (int(itemList[commonFile+3]) / int(itemList[commonFile+2])))
     itemList.append(dlCrc)
     itemList.append(ulCrc)
     return itemList
 
 def calcRu(itemList):
     itemList.append(0)
-    if int(itemList[4]) == 1:
-        itemList[8] = int(itemList[7])
-    elif int(itemList[4]) == 3:
-        itemList[8] = int(itemList[7]) / int(itemList[6]) * 4
-    elif int(itemList[4]) == 6:
-        itemList[8] = int(itemList[7]) / int(itemList[6]) * 2
-    elif int(itemList[3]) == 12:
-        itemList[8] = int(itemList[7]) / int(itemList[6]) * 1
+    if int(itemList[commonFile+2]) == 1:
+        itemList[commonFile+6] = int(itemList[commonFile+5])
+    elif int(itemList[commonFile+2]) == 3:
+        itemList[commonFile+6] = int(itemList[commonFile+5]) / int(itemList[commonFile+4]) * 4
+    elif int(itemList[commonFile+2]) == 6:
+        itemList[commonFile+6] = int(itemList[commonFile+5]) / int(itemList[commonFile+4]) * 2
+    elif int(itemList[commonFile+2]) == 12:
+        itemList[commonFile+6] = int(itemList[commonFile+5]) / int(itemList[commonFile+4]) * 1
     else:
-        itemList[7] = 'error'
+        itemList[commonFile+5] = 'error'
     return itemList
 
 def calcRsrp(itemList):
-    itemList[4] -= 140
+    itemList[commonFile+2] -= 141
     return itemList    
 
 
@@ -57,10 +79,12 @@ def calcRsrp(itemList):
 #NL1C_DL SNR 22, ServingRSRP 93, PCI 23
 #NL1C_DL MIBSNR 21, MIBRSRP 93, PCI 23
 #NL1C_UL: PUSCH CFG enable(109, 3): ucPuschFormat = 1, ucSubcarrierSpacing = 1, ucSubcarrierNum = 1, ucSubcarrierAllocIdx = 11, MCS index = 10, ucRepeatNum = 1, usTransLen = 32
+#NL1C_UL: usTbSize = 616, ucRuNum = 4, RuLth(slotNum) = 16, NewTxFlag = 1
 #[EMAC][0]           0,           0,           0,           0,           0,           0,           0  (备注第一个数字和第4个数字分别是上行和下行速率，2s统计，单位byte)
 #NL1C DL Total: 2, CRC 2, TP(bits) 1360, ACK 2, New 3, UL Total 3, New 3, TP 376(bits)
+#SYS: Set TX RF power 23  
 
-timeRe = r'\d+ 0x\w+ (0x\w+) 0x\w+ 0x\w+ \w+ +'
+timeRe = r'\d+ (0x\w+) (0x\w+) 0x\w+ 0x\w+ \w+ +'
 
 ndciRe = timeRe + r'DL: DCIN(\d), agglvl=(\d), cce=(\d), rep=(\d)'
 npdschRe = timeRe + r'DL: PDSCH_CFG\(\d+,\d+\), bufferidx \d+, newdataflag (\d+), rep (\d+), tti (\d+), mcs (\d+), tbsize (\d+), rnti \d+'
@@ -69,57 +93,65 @@ npuschRe = timeRe + r'NL1C_UL: PUSCH CFG enable\(\d+, \d+\): ucPuschFormat = (\d
 snrRe = timeRe + r'NL1C_DL (MIB|)SNR (\d+), (?:Serving|MIB)RSRP (\d+), PCI (\d+)'
 throughPutRe = timeRe + r'\[EMAC\]\[0\] +(\d+), +\d+, +\d+, +(\d+), +\d+, +\d+, +\d+'
 crcRe = timeRe + r'NL1C DL Total: (\d+), CRC (\d+), TP\(bits\) \d+, ACK \d+, New \d+, UL Total (\d+), New (\d+), TP \d+\(bits\)'
+ulPowerRe = timeRe + r'SYS: Set TX RF power (\d+)'
 
 configList = \
 [\
     {\
     're': ndciRe,\
-    'comment': ['file', 'time', 'DICN', 'agglvl', 'cce', 'rep'],\
-    'num': 5,\
+    'comment': ['file', 'sn', 'time', 'DICN', 'agglvl', 'cce', 'rep'],\
+    'num': 6,\
     'fun': funNull,\
     'sheetName': 'npdcch'\
     },\
     {\
     're': npdschRe,\
-    'comment': ['file', 'time', 'newdataflag', 'rep', 'tti', 'mcs', 'tbsize'],\
-    'num': 6,\
+    'comment': ['file', 'sn', 'time', 'newdataflag', 'rep', 'tti', 'mcs', 'tbsize'],\
+    'num': 7,\
     'fun': funNull,\
     'sheetName': 'npdsch'\
     },\
     {\
     're': nprachRe,\
-    'comment': ['file', 'time', 'Format', 'rep'],\
-    'num': 3,\
+    'comment': ['file', 'sn', 'time', 'Format', 'rep'],\
+    'num': 4,\
     'fun': funNull,\
     'sheetName': 'nprach'\
     },\
     {\
     're': npuschRe,\
-    'comment': ['file', 'time', 'Format', 'SubcarrierSpacing', 'SubcarrierNum', 'MCS/RES', 'rep', 'transLen', 'ru'],\
-    'num': 7,\
+    'comment': ['file', 'sn', 'time', 'Format', 'SubcarrierSpacing', 'SubcarrierNum', 'MCS/RES', 'rep', 'transLen', 'ru'],\
+    'num': 8,\
     'fun': calcRu,\
     'sheetName': 'npusch'\
     },\
     {\
     're': snrRe,\
-    'comment': ['file', 'time', 'type', 'snr', 'rsrp', 'pci'],\
-    'num': 5,\
-    'fun': calcRsrp,\
-    'sheetName': 'snr'\
+    'comment': ['file', 'sn', 'time', 'tbSize', 'ruNum', 'ruLth', 'NewTx'],\
+    'num': 6,\
+    'fun': funNull,\
+    'sheetName': 'npusch_tb'\
     },\
     {\
     're': throughPutRe,\
-    'comment': ['file', 'time', 'ul(bps)', 'dl(bps)'],\
-    'num': 3,\
+    'comment': ['file', 'sn', 'time', 'ul(bps)', 'dl(bps)'],\
+    'num': 4,\
     'fun': calcThroughPut,\
     'sheetName': 'throughPut'\
     },\
     {\
     're': crcRe,\
-    'comment': ['file', 'time', 'dl total', 'dl crc正确', 'ul total', 'ul new', 'dl误码率', 'ul误码率'],\
-    'num': 5,\
+    'comment': ['file', 'sn', 'time', 'dl total', 'dl crc正确', 'ul total', 'ul new', 'dl误码率', 'ul误码率'],\
+    'num': 6,\
     'fun': calcCrc,\
     'sheetName': 'crc'\
+    },\
+    {\
+    're': ulPowerRe,\
+    'comment': ['file', 'sn', 'time', 'TX RF power'],\
+    'num': 3,\
+    'fun': funNull,\
+    'sheetName': 'UL POWER'\
     }\
 ]
 
@@ -144,20 +176,6 @@ class typeClass(object):
         self.calcFun = fun
         self.itemInsList = []
         self.sheetName = sheetName
-
-
-#根据路径递归查找文件，并将文件名相同文件找出
-def findFiles(fileDir):
-    fileList = []
-    fileNamefp = open('fileName.txt', 'w')
-    for root, dirs, files in os.walk(fileDir):
-        if files:
-            for name in files:
-                if re.search('\.tra\.txt$', name):
-                    fileList.append(name)
-                    fileNamefp.write(name+'\n')
-    fileNamefp.close
-    return fileList
 
 def typeClassListInit():
     typeClassInsList = []
@@ -204,7 +222,8 @@ def convertLog(fileDir):
             logErr.write(str(e))
             err = "ErrLine: 文件为" + file + ":" + str(line) + '\n'
             logErr.write(err)
-    writeXls(typeClassInsList, fileDir + '\\logResult')
+    fileName = getFileName(fileDir, 'logResult')
+    writeXls(typeClassInsList, fileDir + '\\' + fileName)
     print('统计处理成功\n')
 
 serviceRe = timeRe + r'.(CONTROL_PLANE_SERVICE_REQ|EMM_ATTACH_REQUEST)'
@@ -313,6 +332,7 @@ def writeTimeXls(typeClassInsList, fileName):
                 sheet.write(row, 4, eachitem.diffList2[num])
     wb.save(fileName + '.xls')
 
+
 def calcAccessTime(fileDir):
     logErr = open('logErrAccess.txt', 'w')
     fileList = findFiles(fileDir)
@@ -327,7 +347,8 @@ def calcAccessTime(fileDir):
             logErr.write(str(e))
             err = "\n errLine: 文件为" + file + ":" + str(line) + '\n'
             logErr.write(err)
-    writeTimeXls(timeTypeClassInsList, fileDir + '\\TimeResult')
+    fileName = getFileName(fileDir, 'TimeResult')
+    writeTimeXls(timeTypeClassInsList, fileDir + '\\' + fileName)
     print('时延计算成功\n')
 
 totalConfig = \
