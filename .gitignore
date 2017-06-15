@@ -71,3 +71,8 @@ Temporary Items
 *.toc
 *.pyz
 *.pkg
+*.manifest
+*.toc
+*.toc
+*.pkg
+*.pyz
