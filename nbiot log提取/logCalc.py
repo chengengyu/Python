@@ -90,10 +90,11 @@ ndciRe = timeRe + r'DL: DCIN(\d), agglvl=(\d), cce=(\d), rep=(\d)'
 npdschRe = timeRe + r'DL: PDSCH_CFG\(\d+,\d+\), bufferidx \d+, newdataflag (\d+), rep (\d+), tti (\d+), mcs (\d+), tbsize (\d+), rnti \d+'
 nprachRe = timeRe + r'prach config,usCellId\d+,usSubframeOffset\d+,ucNInit\d+,ucNStart\d+,ucPreambleFormat(\d+),usRepeatNum(\d+)'
 npuschRe = timeRe + r'NL1C_UL: PUSCH CFG enable\(\d+, \d+\): ucPuschFormat = (\d+), ucSubcarrierSpacing = (\d+), ucSubcarrierNum = (\d+), ucSubcarrierAllocIdx = \d+, (?:MCS|RES) index = (\d+), ucRepeatNum = (\d+), usTransLen = (\d+)'
-snrRe = timeRe + r'NL1C_DL (MIB|)SNR (\d+), (?:Serving|MIB)RSRP (\d+), PCI (\d+)'
+snrRe = timeRe + r'NL1C_DL (MIB|)SNR (-?\d+), (?:Serving|MIB)RSRP (\d+), PCI (\d+)'
 throughPutRe = timeRe + r'\[EMAC\]\[0\] +(\d+), +\d+, +\d+, +(\d+), +\d+, +\d+, +\d+'
 crcRe = timeRe + r'NL1C DL Total: (\d+), CRC (\d+), TP\(bits\) \d+, ACK \d+, New \d+, UL Total (\d+), New (\d+), TP \d+\(bits\)'
-ulPowerRe = timeRe + r'SYS: Set TX RF power (\d+)'
+ulPowerRe = timeRe + r'SYS: Set TX RF power (-?\d+)'
+npuschTbRe = timeRe + r'NL1C_UL: usTbSize = (\d+), ucRuNum = (\d+), RuLth\(slotNum\) = (\d+), NewTxFlag = (\d+)'
 
 configList = \
 [\
@@ -126,11 +127,18 @@ configList = \
     'sheetName': 'npusch'\
     },\
     {\
-    're': snrRe,\
+    're': npuschTbRe,\
     'comment': ['file', 'sn', 'time', 'tbSize', 'ruNum', 'ruLth', 'NewTx'],\
     'num': 6,\
     'fun': funNull,\
     'sheetName': 'npusch_tb'\
+    },\
+    {\
+    're': snrRe,\
+    'comment': ['file', 'sn', 'time', 'type', 'snr', 'rsrp', 'pci'],\
+    'num': 6,\
+    'fun': calcRsrp,\
+    'sheetName': 'snr'\
     },\
     {\
     're': throughPutRe,\
@@ -351,27 +359,90 @@ def calcAccessTime(fileDir):
     writeTimeXls(timeTypeClassInsList, fileDir + '\\' + fileName)
     print('时延计算成功\n')
 
+
+def setCommon(totalIns, fileName, result):
+    totalIns.data['file'] = fileName
+    totalIns.data['sn'] = result.group(1)
+    totalIns.data['timeHec'] = result.group(2)
+    totalIns.data['time'] = int(result.group(2), 16) / 16
+    return totalIns
+
+def setDci(fileName, result):
+    totalIns = totalClass()
+    totalIns = setCommon(totalIns, fileName, result)
+    totalIns.data['type'] = 'DCI'
+    totalIns.data['CCE_dcin'] = int(result.group(3))
+    totalIns.data['CCE_agglvl'] = int(result.group(4))
+    totalIns.data['CCE_cce'] = int(result.group(5))
+    totalIns.data['CCE_rep'] = int(result.group(6))
+    return totalIns
+
+def setNpdsch(fileName, result):
+    totalIns = totalClass()
+    totalIns = setCommon(totalIns, fileName, result)
+    totalIns.data['type'] = 'NPDSCH'
+    totalIns.data['NPDSCH_newDataFlag'] = int(result.group(3))
+    totalIns.data['NPDSCH_req'] = int(result.group(4))
+    totalIns.data['NPDSCH_tti'] = int(result.group(5))
+    totalIns.data['NPDSCH_mcs'] = int(result.group(6))
+    totalIns.data['NPDSCH_tbsize'] = int(result.group(7))    
+    return totalIns
+
+def setNprach(fileName, result):
+    totalIns = totalClass()
+    totalIns = setCommon(totalIns, fileName, result)
+    totalIns.data['type'] = 'NPRACH'
+    totalIns.data['NPRACH_format'] = int(result.group(3))
+    totalIns.data['NPRACH_req'] = int(result.group(4)) 
+    return totalIns
+
+def setNpusch(fileName, result):
+    totalIns = totalClass()
+    totalIns = setCommon(totalIns, fileName, result)
+    totalIns.data['type'] = 'NPUSCH'
+    totalIns.data['NPUSCH_format'] = int(result.group(3))
+    totalIns.data['NPUSCH_subCarrierSpace'] = int(result.group(4))
+    totalIns.data['NPUSCH_subCarrierNum'] = int(result.group(5))
+    totalIns.data['NPUSCH_mcs/res'] = int(result.group(6))
+    totalIns.data['NPUSCH_req'] = int(result.group(7))    
+    totalIns.data['NPUSCH_transLen'] = int(result.group(8))
+    return totalIns
+
+def setNpuschTb(fileName, result):
+    totalIns = totalClass()
+    totalIns = setCommon(totalIns, fileName, result)
+    totalIns.data['type'] = 'NPUSCH'
+    totalIns.data['NPUSCH_tbsize'] = int(result.group(3))
+    totalIns.data['NPUSCH_ruNum'] = int(result.group(4))
+    totalIns.data['NPUSCH_ruLth'] = int(result.group(5))
+    totalIns.data['NPUSCH_newTx'] = int(result.group(6))
+    return totalIns
+
 totalConfig = \
 [\
     {\
     're': ndciRe,\
-    'setFun':\
+    'setFun':setDci\
     },\
     {\
     're': npdschRe,\
-    'setFun':\
+    'setFun':setNpdsch\
     },\
     {
     're': nprachRe,\
-    'setFun':\
+    'setFun':setNprach\
     },\
     {
     're': npuschRe,\
-    'setFun':\    
+    'setFun':setNpusch\
+    },\
+    {
+    're': npuschTbRe,\
+    'setFun':setNpuschTb\
     },\
     {
     're': snrRe,\
-    'setFun':\    
+    'setFun':\
     },\
     {
     're': throughPutRe,\
@@ -383,16 +454,38 @@ totalConfig = \
     }\
 ]
 
+timeRe = r'\d+ (0x\w+) (0x\w+) 0x\w+ 0x\w+ \w+ +'
 
+ndciRe = timeRe + r'DL: DCIN(\d), agglvl=(\d), cce=(\d), rep=(\d)'
+npdschRe = timeRe + r'DL: PDSCH_CFG\(\d+,\d+\), bufferidx \d+, newdataflag (\d+), rep (\d+), tti (\d+), mcs (\d+), tbsize (\d+), rnti \d+'
+nprachRe = timeRe + r'prach config,usCellId\d+,usSubframeOffset\d+,ucNInit\d+,ucNStart\d+,ucPreambleFormat(\d+),usRepeatNum(\d+)'
+npuschRe = timeRe + r'NL1C_UL: PUSCH CFG enable\(\d+, \d+\): ucPuschFormat = (\d+), ucSubcarrierSpacing = (\d+), ucSubcarrierNum = (\d+), ucSubcarrierAllocIdx = \d+, (?:MCS|RES) index = (\d+), ucRepeatNum = (\d+), usTransLen = (\d+)'
+snrRe = timeRe + r'NL1C_DL (MIB|)SNR (\d+), (?:Serving|MIB)RSRP (\d+), PCI (\d+)'
+throughPutRe = timeRe + r'\[EMAC\]\[0\] +(\d+), +\d+, +\d+, +(\d+), +\d+, +\d+, +\d+'
+crcRe = timeRe + r'NL1C DL Total: (\d+), CRC (\d+), TP\(bits\) \d+, ACK \d+, New \d+, UL Total (\d+), New (\d+), TP \d+\(bits\)'
+ulPowerRe = timeRe + r'SYS: Set TX RF power (\d+)'
+npuschTbRe = timeRe + r'NL1C_UL: usTbSize = (\d+), ucRuNum = (\d+), RuLth\(slotNum\) = (\d+), NewTxFlag = (\d+)'
+
+
+
+def setNpuschTb(fileName, result):
+    totalIns = totalClass()
+    totalIns = setCommon(totalIns, fileName, result)
+    totalIns.data['type'] = 'SNR'
+    totalIns.data['SNR_type'] = result.group(3)
+    totalIns.data['SNR_snr'] = int(result.group(4))
+    totalIns.data['SNR_rsrp'] = int(result.group(5))
+    totalIns.data['SNR_pci'] = int(result.group(6))
+    return totalIns
 
 class totalClass(object):
     def __init__(self):
-        self.type = ''
         self.data = {
                     'file': '',\
                     'sn': '',\
                     'timeHec': '0xffffffff',\
                     'time': 0,\
+                    'type': '',\
                     'CCE_dcin': '',\
                     'CCE_agglvl': '',\
                     'CCE_cce': '',\
@@ -410,6 +503,10 @@ class totalClass(object):
                     'NPUSCH_mcs/res': '',\
                     'NPUSCH_req': '',\
                     'NPUSCH_transLen': '',\
+                    'NPUSCH_tbsize',\
+                    'NPUSCH_ruNum',\
+                    'NPUSCH_ruLth',\
+                    'NPUSCH_newTx',\
                     'SNR_type': '',\
                     'SNR_snr': '',\
                     'SNR_rsrp': '',\
@@ -419,8 +516,54 @@ class totalClass(object):
                     'CRC_dlTotal': '',\
                     'CRC_dlCorrect': '',\
                     'CRC_ulTotal': '',\
-                    'CRC_ulNew': ''\
-                    }
+                    'CRC_ulNew': '',\
+                    'ULPOWER_txTfPower',\
+                    } 
+
+class totalTypeClass(object):
+    def __init__(self, totalConfig):
+        self.itemList = []
+        self.configList = totalConfig
+
+    def getTotal(fileName, line):
+        totalClassIns = totalClass()
+        for config in self.configList:
+            result = re.search(config['re'], line)
+            if result:
+                totalClassIns = config['setFun'](fileName, result)
+                self.itemList.append(totalClassIns)
+                return
+
+
+def writeTotalXls(toalTypeIns, fileName):
+    wb = xlwt.Workbook(encoding = 'utf-8')
+    sheet = wb.add_sheet('total')
+    tempTotalIns = totalClass()
+    row = 0
+    for num, key in enumerate(tempTotalIns.data.keys()):
+        sheet.write(row, num, key)
+    for num, eachitem in enumerate(toalTypeIns.itemList):
+        row = num + 1
+        for col, value in enumerate(eachitem.values()):
+            sheet.write(row, col, value)
+    wb.save(fileName + '.xls')
+
+def converTotal(fileDir):
+    logErr = open('logErrTotal.txt', 'w')
+    fileList = findFiles(fileDir)
+    toalTypeIns = totalTypeClass(totalConfig)
+    for file in fileList:
+        fp = open(fileDir + '\\' + file, 'r')
+        try:
+            for line in fp:
+                toalTypeIns.getTotal(file, line)
+        except Exception as e:
+            logErr.write(str(e))
+            err = "\n errLine: 文件为" + file + ":" + str(line) + '\n'
+            logErr.write(err)
+    fileName = getFileName(fileDir, 'TotalResult')
+    writeTimeXls(toalTypeIns, fileDir + '\\' + fileName)
+    print('汇总处理成功\n')
 
 
 if __name__ == "__main__":
