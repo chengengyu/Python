@@ -82,7 +82,17 @@ Temporary Items
 *.toc
 *.pyz
 *.pkg
+<<<<<<< HEAD
 >>>>>>> master
+*.manifest
+*.toc
+=======
+*.manifest
+*.toc
+*.toc
+>>>>>>> master
+*.pkg
+*.pyz
 *.manifest
 *.toc
 *.pkg

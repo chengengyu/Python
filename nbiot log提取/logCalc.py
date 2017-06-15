@@ -234,11 +234,12 @@ def convertLog(fileDir):
     writeXls(typeClassInsList, fileDir + '\\' + fileName)
     print('统计处理成功\n')
 
-serviceRe = timeRe + r'.(CONTROL_PLANE_SERVICE_REQ|EMM_ATTACH_REQUEST)'
-rrcReqRe = timeRe + r'.(rrcConnectionRequest-NB)'
-preambleRe = timeRe + r'(Preamble start)'
-rrcConRe = timeRe + r'.(rrcConnectionSetup-NB)'
-rrcCompRe = timeRe + r'.(rrcConnectionSetupComplete-NB)'
+timeReFortime = r'\d+ 0x\w+ (0x\w+) 0x\w+ 0x\w+ \w+ +'
+serviceRe = timeReFortime + r'.(CONTROL_PLANE_SERVICE_REQ|EMM_ATTACH_REQUEST)'
+rrcReqRe = timeReFortime + r'.(rrcConnectionRequest-NB)'
+preambleRe = timeReFortime + r'(Preamble start)'
+rrcConRe = timeReFortime + r'.(rrcConnectionSetup-NB)'
+rrcCompRe = timeReFortime + r'.(rrcConnectionSetupComplete-NB)'
 
 
 timeConfigList = \
