@@ -1,0 +1,119 @@
+Xoffset = -80;
+Yoffset	= 20;
+
+var nav,old,iex=(document.all),yyy=-1000;
+
+if(navigator.appName=="Netscape")
+{
+	(document.layers)?nav=true:old=true;
+}
+
+if(!old)
+{
+	var skn=(nav)?document.dek:document.all["dek2"].style;
+	if(nav)document.captureEvents(Event.MOUSEMOVE);
+	document.onmousemove=get_mouse;
+}
+
+function popup(bak, type, owner, delegate, time, layer)
+{
+	
+	var content = "";
+	content += "<table border='0' bordercolor='black' bgcolor='black' cellpadding='0' cellspacing='1'><tr><td>";
+	content += "<table width='250' border='0' bgcolor='" + bak + "' cellpadding='0' cellspace='0'>";
+	content += "<tr><td><font face='verdana' size='2' id='popup1'>" + type		+ "</font></td></tr>";
+	content += "<tr><td><font face='verdana' size='2' id='popup2'>" + owner		+ "</font></td></tr>";
+	content += "<tr><td><font face='verdana' size='2' id='popup3'>" + delegate	+ "</font></td></tr>";
+	
+	if(time!=null&&time!="")
+		content += "<tr><td><font face='verdana' size='1' color='red'>" + time	+ "</font></td></tr>";
+		
+	content += "</table>";
+	content += "</td></tr></table>";
+
+	if(old)
+	{
+		alert(msg);
+		return;
+	} 
+	else
+	{
+		yyy=Yoffset;
+		
+		if(iex)
+		{
+			var l;
+			
+			document.all["dek2"].innerHTML			= content;
+			skn.visibility	= "visible";
+				
+			//l.innerHTML			= content;
+			//l.style.visibility	= "visible";
+		}
+	}
+}
+function popuproominfo(bak, type, owner, delegate, time, admin,layer)
+{
+	
+	var content = "";
+	content += "<table border='0' bordercolor='black' bgcolor='black' cellpadding='0' cellspacing='1'><tr><td>";
+	content += "<table width='352' border='0' bgcolor='" + bak + "' cellpadding='0' cellspace='0'>";
+	content += "<tr><td><font face='verdana' size='2' id='popup1'>" + type		+ "</font></td></tr>";
+	content += "<tr><td><font face='verdana' size='2' id='popup2'>" + owner		+ "</font></td></tr>";
+	content += "<tr><td><font face='verdana' size='2' id='popup3'>" + delegate	+ "</font></td></tr>";
+	
+	if(time!=null&&time!="")
+		content += "<tr><td><font face='verdana' size='2' >" + time	+ "</font></td></tr>";
+	content += "<tr><td><font face='verdana' size='2' id='popup4' color='red'>" + admin	+ "</font></td></tr>";	
+	content += "</table>";
+	content += "</td></tr></table>";
+
+	if(old)
+	{
+		alert(msg);
+		return;
+	} 
+	else
+	{
+		yyy=Yoffset;
+		
+		if(iex)
+		{
+			var l;
+			
+			document.all["dek2"].innerHTML			= content;
+			skn.visibility	= "visible";
+				
+			//l.innerHTML			= content;
+			//l.style.visibility	= "visible";
+		}
+	}
+}
+function get_mouse(e)
+{
+	var x=(nav)?e.pageX:event.x+document.body.scrollLeft;
+
+	if(x + Xoffset <= document.body.scrollWidth - 180)
+	{
+		skn.left = x+Xoffset;
+	}
+	else
+	{
+		skn.left = document.body.scrollWidth - 180;
+	}
+
+	var y=(nav)?e.pageY:event.y+document.body.scrollTop;
+
+	skn.top = y+yyy;
+}
+
+function kill()
+{
+	document.all["dek2"].innerHTML			= "";
+	if(!old)
+	{
+		yyy=-1000;
+		skn.visibility="hidden";
+	}
+}
+

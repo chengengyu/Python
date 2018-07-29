@@ -1,0 +1,875 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<!-- saved from url=(0068)http://itgweb/RoomReservationV2/roomreservation_back.aspx?subsysid=0 -->
+<html xmlns:m="http://schemas.microsoft.com/office/2004/12/omml" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>会议室预定系统</title>
+    <meta content="Microsoft Visual Studio .NET 7.1" name="GENERATOR">
+    <meta content="C#" name="CODE_LANGUAGE">
+    <meta content="JavaScript" name="vs_defaultClientScript">
+    <meta content="http://schemas.microsoft.com/intellisense/ie5" name="vs_targetSchema">
+
+    <script language="javascript" type="text/javascript">
+		  
+		  var xmlHttp ;  //创建XMLRequest对象          //be added by zhangchengcui
+		  var day;
+		function DumpbigChart(dt)
+        {
+
+             //获取会议室下拉列表中的会议室
+             var locs="";
+            //   for(var i=0;i<document.frmReservation.selLocation.options.length;i++)  
+            //  {  
+            //      locs=locs+document.frmReservation.selLocation.options[i].value+";";  
+            //    }
+             locs=document.frmReservation.hfRoomsid.value
+//             if(locs.length>0)
+//             {
+//             locs=locs.substring(0,locs.length-1);
+//             } 
+             var subsysid=document.frmReservation.hfsubsysid.value
+             //会议室图标链接效果
+             var hycontralname="HyperLink"+subsysid;
+             var hycontrol=document.all[hycontralname];
+             hycontrol.style.backgroundColor="#1874CD";
+             hycontrol.style.color="white";
+             hycontrol.style.fontSize="small";
+             //获取会议室预定列表
+	         var xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
+	         xmlhttp.Open("POST","reservationchart.aspx?subsysid="+subsysid+"&Eventdate=" + dt+"&Rooms="+locs,false);
+	         xmlhttp.send();
+	         var dumpobj=document.all["bigChart"]; 
+	         dumpobj.innerHTML=xmlhttp.responseText
+	         
+	       
+        }		    
+			function DumpRepeatChart()   
+			{
+			 var str = document.frmReservation.selLocation.value;   
+		     var owner=document.all["lbl_owner"].innerHTML;
+		     if(str!=null)
+		     {
+		        createXml();
+		        var subsysid=document.frmReservation.hfsubsysid.value
+		        var url = "newPage.aspx?owner="+owner+"&subsysid="+subsysid+"&roomID="+str;     
+		        xmlHttp.open("GET",url,true);
+		        xmlHttp.onreadystatechange = statechange; 
+		        xmlHttp.send();
+		     }     
+			}
+		   
+		 
+		    
+		    function createXml()  // be added by zhangchengcui
+		    {
+		      if(window.ActiveXObject)
+		        xmlHttp = new ActiveXObject("Microsoft.XMLHTTP");
+		      else if (window.XMLHttpRequest)
+		        xmlHttp = new XMLHttpRequest();
+		    
+		    }
+		    
+		   function changeChart()
+		   {   
+		     //m_startdate = document.frmReservation.selStartYear.value +"-"+document.frmReservation.selStartMonth.value+"-"+document.frmReservation.selStartDay.value;
+		    // DumpSmallChart(document.frmReservation.startDate.value,document.frmReservation.selLocation.value);
+		     DumpbigChart(document.frmReservation.startDate.value);
+		     DumpRepeatChart();
+		    
+		   }
+		   //控制是否可以批量预定
+		   function statechange()                              
+		   {
+		      var rightstr;
+		      var isadin;
+		      var aheadday;
+		       if(xmlHttp.readystate == 4 && xmlHttp.status == 200)
+		      {
+		        var rightInfo = xmlHttp.responseText;
+		        if(rightInfo != null && rightInfo != "")
+		        {		       
+		           rightstr=rightInfo.split(";");  
+		           isadmin=rightstr[0];
+		           aheadday=rightstr[1];
+		           day=aheadday;
+		           if(isadmin=='true')
+		           {
+		             document.all["trRepeatTitle"].style.display="";
+		             document.all["trRepeatInfo"].style.display="";
+
+		           }
+		           else
+		           {
+		             document.all["trRepeatTitle"].style.display="none";
+		             document.all["trRepeatInfo"].style.display="none";
+
+		           }
+		        }
+		        
+		      } 
+		   
+		   
+		   }
+		   
+		   function ChangeChoice(choiceID)                     
+		    {
+		      document.frmReservation.RepeatType[choiceID-1].checked=true;
+		      checkRepeatOption();   
+		    }
+		    
+		    function checkform()
+		      {
+		    
+		        if(document.frmReservation.selLocation.value=="")
+		          {
+		            alert("请选择会议室");
+		            document.frmReservation.selLocation.focus();
+		            return false;
+		          }
+		        
+		        if(document.frmReservation.textDescription.value=="")
+		          {
+		            alert("会议描述不能为空");
+		            document.frmReservation.textDescription.focus();
+		            return false;
+		          }
+				//calendar取值有问题
+		        document.frmReservation.endDate.value=document.frmReservation.selUntilMonth.value+"/"+document.frmReservation.selUntilDay.value+"/"+document.frmReservation.selUntilYear.value;
+		        
+		        
+		        sDate=new Date(document.frmReservation.startDate.value);
+		        eDate=new Date(document.frmReservation.endDate.value); 
+		        if(sDate>eDate)
+		          {
+		            alert("起始时间不能迟于或等于终止时间");
+		            document.frmReservation.selStartMonth.focus();
+		            return false; 
+		          }
+		          
+		        if(document.frmReservation.selStartTime.selectedIndex>=document.frmReservation.selEndTime.selectedIndex)
+		          {
+		             alert("起始时间不能迟于或等于终止时间");
+		             document.frmReservation.selEndTime.focus(); 
+		             return false; 
+		          }      
+		          return true;
+		      }
+		   
+		  
+		  
+		  
+		  
+		   function setDiv()
+		    {
+		      var idGeneralInfo=ReadyCookies("idGeneralInfo:");
+		      if(idGeneralInfo=="NA")
+		        {
+		          document.all("idGeneralInfo").style.display="";
+		        }
+		       if(idGeneralInfo=="yes")
+		        {
+		          document.all("idGeneralInfo").style.display="";
+		        }
+		        if(idGeneralInfo=="no")
+		        {
+		          document.all("idGeneralInfo").style.display="none";
+		          //swapImage("img_idGeneralInfo","click");
+		        }
+		        
+		        
+		      var idDates=ReadyCookies("idDates:");
+		      if(idDates=="NA")
+		        {
+		          document.all("idDates").style.display="";
+		        }
+		       if(idDates=="yes")
+		        {
+		          document.all("idDates").style.display="";
+		        }
+		        if(idDates=="no")
+		        {
+		          document.all("idDates").style.display="none";
+		          //swapImage("img_idDates","click");
+		        }  
+		       
+		      var idReserveRoom=ReadyCookies("idReserveRoom:");
+		      if(idReserveRoom=="NA")
+		        {
+		          document.all("idReserveRoom").style.display="none";
+		        }
+		       if(idReserveRoom=="yes")
+		        {
+		          document.all("idReserveRoom").style.display="";
+		        }
+		        if(idReserveRoom=="no")
+		        {
+		          document.all("idReserveRoom").style.display="none";
+		          //swapImage("img_idReserveRoom","click");
+		        }   
+		        
+		      var idBigChart=ReadyCookies("idBigChart:");
+		      if(idBigChart=="NA")
+		        {
+		          document.all("idBigChart").style.display="";
+		        }
+		       if(idBigChart=="yes")
+		        {
+		          document.all("idBigChart").style.display="";
+		        }
+		        if(idBigChart=="no")
+		        {
+		          document.all("idBigChart").style.display="none";
+		          //swapImage("img_idBigChart","click");
+		        }   
+		        
+		        checkImg();
+		        return true;  
+		    }  
+		      
+		   function ReadyCookies(CookieName)
+		    {
+		      var isfound = false;
+		      var start = 0;
+		      var end = 0;
+		      var CookieString =unescape(document.cookie);
+		      var i = 0;
+		      
+		      while(i<CookieString.length)
+		      {
+		        start=i;
+		        end=start + CookieName.length;
+		        if(CookieString.substring(start,end) == CookieName)
+		          {
+		            isfound=true;
+		            break;
+		          }
+		        i++;  
+		      }
+		      
+		      if(isfound)
+		       {
+		        start=end;
+		        end=CookieString.indexOf("&", start);
+		        
+		        if(end < start)
+		          end = CookieString.length;
+		         return unescape(CookieString.substring(start, end));		          
+		        }
+		      
+		      return "NA";
+		    } 
+
+
+		  function SaveCookie()
+		    {
+		      var str="";
+		      if(document.all("idGeneralInfo").style.display=="")
+				{
+				  str=str + "idGeneralInfo:" + escape("yes") + "&";
+				}else
+				  {
+				    str=str + "idGeneralInfo:" + escape("no") + "&";
+				  }
+			  
+			  if(document.all("idDates").style.display=="")
+				{
+				  str=str + "idDates:" + escape("yes") + "&";
+				}else
+				  {
+				    str=str + "idDates:" + escape("no") + "&";
+				  }	 
+				  
+			  if(document.all("idReserveRoom").style.display=="")
+				{
+				  str=str + "idReserveRoom:" + escape("yes") + "&";
+				}else
+				  {
+				    str=str + "idReserveRoom:" + escape("no") + "&";
+				  }
+
+			
+			  if(document.all("idBigChart").style.display=="")
+				{
+				  str=str + "idBigChart:" + escape("yes")+ "&";
+				}else
+				  {
+				    str=str + "idBigChart:" + escape("no")+ "&";
+				  } 
+				   
+			  ExpTime=new Date();	  
+			  ExpTime=new Date(ExpTime.getTime()+365*24*60*60*1000);
+			  str = "setting=" + str + ";expires=" + ExpTime.toGMTString();
+			  //alert(str);
+			  document.cookie=str;   
+			  //alert(document.cookie);
+			  return true;	  
+			}
+		  
+			var hardchanged=false;
+		    function swapImage(ImgObj,ievent)
+		      {
+		        /* checkImg();
+		         if(!hardchanged)
+		         {
+					objImg=document.getElementById(ImgObj);
+					pathstr=new String(objImg.src);
+		         
+					 if(pathstr.indexOf("images/downarrow.jpg")>0)
+					  {
+						objImg.src="images/rightarrow.jpg";
+					  }else
+					  {
+						objImg.src="images/downarrow.jpg";
+					  }
+		           }*/
+		         
+		         
+		           checkImg();
+		          
+		           
+		      }
+		      
+		      function checkImg()
+		       {
+		         objImg=document.getElementById("img_idGeneralInfo");
+		           if(document.all("idGeneralInfo").style.display=="none")
+		             { 
+		               objImg.src="images/downarrow.jpg";   
+		             }else
+		             {
+		               objImg.src="images/rightarrow.jpg"; 
+		             }
+		             
+		           objImg=document.getElementById("img_idDates");
+		           if(document.all("idDates").style.display=="none")
+		             {
+		                objImg.src="images/downarrow.jpg"; 
+		             }else
+		             {  
+		               objImg.src="images/rightarrow.jpg";
+		             }  
+		           
+		           objImg=document.getElementById("img_idReserveRoom");
+		           if(document.all("idReserveRoom").style.display=="none")
+		             {   
+						objImg.src="images/downarrow.jpg";
+		             }else
+		             {
+		                objImg.src="images/rightarrow.jpg";
+		             }  
+		             
+		           objImg=document.getElementById("img_idBigChart");
+		           if(document.all("idBigChart").style.display=="none")
+		             {
+		               objImg.src="images/downarrow.jpg"; 
+		             }else
+		             { 
+		               objImg.src="images/rightarrow.jpg";
+		             }      
+		       }
+    </script>
+
+    <style type="text/css">.dek { Z-INDEX: 200; VISIBILITY: hidden; POSITION: absolute }
+		.style1 {
+	font-size: x-small;
+}
+		.style3 {
+	font-family: Verdana;
+	font-size: x-small;
+}
+		.style4 {
+	background-color: #FFFF00;
+}
+		</style>
+    <style type="text/css">
+        A { text-decoration: NONE; color: #51bfe0}
+        A:hover { background-color: #CCFFFF; }
+        </style>
+    <link href="./会议室预定系统_files/calendar.css" type="text/css" rel="STYLESHEET">
+
+    <script language="JavaScript" src="./会议室预定系统_files/calendar.js.下载" type="text/javascript"></script><style>
+#container {
+position : absolute;
+left : 100px;
+top : 100px;
+width : 124px;
+height : 140px;
+clip:rect(0px 124px 140px 0px);
+visibility : hidden;
+background-color : #ffffff
+}
+</style>
+</head><body onbeforeunload="javascript:SaveCookie();" ms_positioning="GridLayout"><div z-index="10" id="container" onmouseout="calendarTimeout();" onmouseover="if (timeoutId) clearTimeout(timeoutId);" style="visibility: hidden; left: 10px; top: -5px;"><form onsubmit="this.year.blur();return false;"><table width="100%" border="0" cellspacing="0" cellpadding="2" class="calBorderColor"><tbody><tr><td valign="top"><table width="100%" border="0" cellspacing="0" cellpadding="1" class="calBgColor"><tbody><tr><td width="60%" class="cal" align="left"><table border="0" cellspacing="0" cellpadding="0"><tbody><tr><td><a href="javascript: g_Calendar.changeMonth(-1);"><img name="calendar" src="./会议室预定系统_files/down.gif" width="8" height="12" border="0" alt=""></a></td><td class="cal" width="100%" align="center">July</td><td class="cal"><a href="javascript: g_Calendar.changeMonth(+1);"><img name="calendar" src="./会议室预定系统_files/up.gif" width="8" height="12" border="0" alt=""></a></td></tr></tbody></table></td><td width="40%" align="right" class="cal"><table border="0" cellspacing="0" cellpadding="0"><tbody><tr><td class="cal"><a href="javascript: g_Calendar.changeYear(-1);"><img name="calendar" src="./会议室预定系统_files/down.gif" width="8" height="12" border="0" alt=""></a></td><td class="cal" width="100%" align="center">2018</td><td class="cal"><a href="javascript: g_Calendar.changeYear(+1);"><img name="calendar" src="./会议室预定系统_files/up.gif" width="8" height="12" border="0" alt=""></a></td></tr></tbody></table></td></tr></tbody></table><table width="100%" border="0" cellspacing="0" cellpadding="1" class="calBgColor"><tbody><tr><td align="center" class="calDaysColor">Su</td><td align="center" class="calDaysColor">Mo</td><td align="center" class="calDaysColor">Tu</td><td align="center" class="calDaysColor">We</td><td align="center" class="calDaysColor">Th</td><td align="center" class="calDaysColor">Fr</td><td align="center" class="calDaysColor">Sa</td></tr><tr><td width="16" align="center" class="calWeekend"><span class="disabled">1</span></td><td width="16" align="center" class="cal"><span class="disabled">2</span></td><td width="16" align="center" class="cal"><span class="disabled">3</span></td><td width="16" align="center" class="cal"><span class="disabled">4</span></td><td width="16" align="center" class="cal"><span class="disabled">5</span></td><td width="16" align="center" class="cal"><span class="disabled">6</span></td><td width="16" align="center" class="calWeekend"><span class="disabled">7</span></td></tr><tr><td width="16" align="center" class="calWeekend"><span class="disabled">8</span></td><td width="16" align="center" class="cal"><span class="disabled">9</span></td><td width="16" align="center" class="cal"><span class="disabled">10</span></td><td width="16" align="center" class="cal"><span class="disabled">11</span></td><td width="16" align="center" class="cal"><span class="disabled">12</span></td><td width="16" align="center" class="cal"><span class="disabled">13</span></td><td width="16" align="center" class="calWeekend"><span class="disabled">14</span></td></tr><tr><td width="16" align="center" class="calWeekend"><span class="disabled">15</span></td><td width="16" align="center" class="cal"><span class="disabled">16</span></td><td width="16" align="center" class="cal"><span class="disabled">17</span></td><td width="16" align="center" class="cal"><span class="disabled">18</span></td><td width="16" align="center" class="cal"><span class="disabled">19</span></td><td width="16" align="center" class="cal"><span class="disabled">20</span></td><td width="16" align="center" class="calWeekend"><span class="disabled">21</span></td></tr><tr><td width="16" align="center" class="calWeekend"><span class="disabled">22</span></td><td width="16" align="center" class="cal"><span class="disabled">23</span></td><td width="16" align="center" class="cal"><span class="disabled">24</span></td><td width="16" align="center" class="cal"><span class="disabled">25</span></td><td width="16" align="center" class="cal"><span class="disabled">26</span></td><td width="16" align="center" class="cal"><span class="disabled">27</span></td><td width="16" align="center" class="calHighlightColor"><span class="disabled">28</span></td></tr><tr><td width="16" align="center" class="calWeekend"><span class="disabled">29</span></td><td width="16" align="center" class="cal"><span class="disabled">30</span></td><td width="16" align="center" class="cal"><span class="disabled">31</span></td><td width="16" align="center" class="cal">&nbsp;</td><td width="16" align="center" class="cal">&nbsp;</td><td width="16" align="center" class="cal">&nbsp;</td><td width="16" align="center" class="calWeekend">&nbsp;</td></tr><tr><td width="16" align="center" class="calWeekend">&nbsp;</td><td width="16" align="center" class="cal">&nbsp;</td><td width="16" align="center" class="cal">&nbsp;</td><td width="16" align="center" class="cal">&nbsp;</td><td width="16" align="center" class="cal">&nbsp;</td><td width="16" align="center" class="cal">&nbsp;</td><td width="16" align="center" class="calWeekend">&nbsp;</td></tr></tbody></table></td></tr></tbody></table></form></div>
+
+    <script language="JavaScript" src="./会议室预定系统_files/reservation.js.下载" type="text/javascript"></script>
+
+
+
+    <div class="dek" id="dek2" style="z-index: 101; visibility: hidden; position: absolute">
+    </div>
+
+    <script language="JavaScript" src="./会议室预定系统_files/popup.js.下载" type="text/javascript"></script>
+
+    <form name="frmReservation" method="post" action="http://itgweb/RoomReservationV2/roomreservation_back.aspx" id="frmReservation">
+<input type="hidden" name="__VIEWSTATE" id="__VIEWSTATE" value="/wEPDwUKMTc1MzQyMzUzNA8WAh4IU3ViU3lzSUQFATAWAgIBD2QWCmYPFgIeB1Zpc2libGVoZAIGDw8WAh4EVGV4dAUKY2hlbmdlbmd5dWRkAgcPEGQPFhRmAgECAgIDAgQCBQIGAgcCCAIJAgoCCwIMAg0CDgIPAhACEQISAhMWFBAFB0E0MDLlrqQFAzcwMWcQBQY0MDflrqQFAzcwMmcQBQY0MTXlrqQFAzcwNGcQBQY0MDnlrqQFAzcwNWcQBQznm5vlnLAxMDHlrqQFAzcwNmcQBQdBNDAy5a6kBQM3MDFnEAUGNDA35a6kBQM3MDJnEAUGNDE15a6kBQM3MDRnEAUGNDA55a6kBQM3MDVnEAUM55ub5ZywMTAx5a6kBQM3MDZnEAUHQTQwMuWupAUDNzAxZxAFBjQwN+WupAUDNzAyZxAFBjQxNeWupAUDNzA0ZxAFBjQwOeWupAUDNzA1ZxAFDOebm+WcsDEwMeWupAUDNzA2ZxAFB0E0MDLlrqQFAzcwMWcQBQY0MDflrqQFAzcwMmcQBQY0MTXlrqQFAzcwNGcQBQY0MDnlrqQFAzcwNWcQBQznm5vlnLAxMDHlrqQFAzcwNmcUKwEAZAIIDxBkDxYGZgIBAgICAwIEAgUWBhAFDOaKgOacr+iuqOiuugUBMWcQBRLmgLvoo4Hlip7lhazkvJrorq4FATJnEAUS5LiJ5Zyw6KeG6aKR5Lya6K6uBQEzZxAFDOWfueiureS8muiurgUBNGcQBRLlpJbpg6jmjqXlvoXkvJrorq4FATVnEAUG5L6L5LyaBQE2Z2RkAgoPFgIeBGhyZWYFG215cm9vbV9iYWNrLmFzcHg/c3Vic3lzaWQ9MGRkK6zq1F/7lj0ItmJDUvhlKTd54gg=">
+
+<script language="JavaScript">
+function ResetPostBack(){DumpbigChart(); changeChart();}
+</script>
+
+<input type="hidden" name="__EVENTVALIDATION" id="__EVENTVALIDATION" value="/wEWBgKMx47/DALb6LD4AgLuyv+/CgKSmuHEDQL8u/2tCgLL7ojoAiuZKrxvX3bn9QtfzDYiR9ZLjdVb">
+        
+        <input type="hidden" size="20" name="startDate" value="7/28/2018">
+        <input type="hidden" size="20" name="endDate" value="7/28/2018">
+        <input type="hidden" name="IsPostback">
+        
+        <!-- General Information -->
+        <table id="Table4" cellspacing="1" cellpadding="0" width="731" align="center" border="0">
+            <tbody><tr>
+                <td colspan="4" style="height: 18px">
+                    <img src="./会议室预定系统_files/yuding.gif" style="width: 53px; height: 41px">
+                    <a id="HyperLink1" href="http://itgweb/RoomReservationV2/roomreservation_back.aspx?subsysid=1" style="color:Blue;background-color:Transparent;font-family:宋体;font-size:X-Small;font-weight:bold;text-decoration:underline;">公司会议室</a>&nbsp;
+                    <a id="HyperLink2" href="http://itgweb/RoomReservationV2/roomreservation_back.aspx?subsysid=2" style="color:Blue;background-color:Transparent;font-family:宋体;font-size:X-Small;font-weight:bold;text-decoration:underline;">上海会议室</a>&nbsp;
+                    <a id="HyperLink3" href="http://itgweb/RoomReservationV2/roomreservation_back.aspx?subsysid=3" style="color:Blue;background-color:Transparent;font-family:宋体;font-size:X-Small;font-weight:bold;text-decoration:underline;">西安会议室</a>&nbsp;
+                    <a id="HyperLink0" href="http://itgweb/RoomReservationV2/roomreservation_back.aspx?subsysid=0" style="color: white; font-size: small; font-weight: bold; text-decoration: underline; background-color: rgb(24, 116, 205);">部门级会议室</a>
+                </td>
+            </tr>
+        </tbody></table>
+        <table id="helpTable" cellspacing="1" cellpadding="0" width="731" align="center" bgcolor="#777777" border="0">
+	<tbody><tr id="errorcell10" bgcolor="#666666">
+		<td style="height: 18px" width="18">
+                    <a href="javascript:">
+                        <img id="img1" onmouseover="javascript:swapImage(&#39;img1&#39;,&#39;mouseover&#39;);" onmouseout="javascript:swapImage(&#39;img1&#39;,&#39;mouseout&#39;);" height="14" src="./会议室预定系统_files/rightarrow.jpg" width="13" border="0"></a></td>
+		<td width="8" style="height: 19px">
+                </td>
+		<td width="696" style="height: 19px">
+                    <font face="Verdana" color="#ffffff" size="2">欢迎使用大唐移动会议室预订系统！</font>
+                </td>
+	</tr>
+	<tr>
+		<td width="729" bgcolor="#ffffff" colspan="4" style="height: 60px">
+                    <div id="idHelp">
+                        <table cellspacing="0" cellpadding="0" width="100%" border="0">
+                            <tbody><tr>
+                                <td width="10" style="height: 19px">
+                                </td>
+                                <td style="height: 19px">
+                                    <font face="Verdana" color="black" size="2">会议室预定系统是分别为北京总部、上海子公司、西安分公司全体员工或少数部门员工提供会议室的使用情况查询、预定功能的系统。
+                                    </font>
+                                    <br>
+                                    <font face="Verdana" color="black" size="2">主要使用部门及人员：全体员工 主要功能：提供会议室使用情况查询、预定功能。开发者：大唐移动信息中心
+                                    </font>
+                                    <br>
+                                    <span style="font-size: 10pt; color: #ff0000; font-family: Verdana">温馨提示： 权限申请及日常问题处理请登录ITG提交，登录地址:
+                                    </span><a href="http://itgweb/helpdesk_yyfw/main.aspx" style="font-size: 10pt; color: #ff0000; font-family: Verdana">http://itgweb/helpdesk_yyfw/main.aspx</a>
+                                </td>
+                            </tr>
+                        </tbody></table>
+                    </div>
+                </td>
+	</tr>
+</tbody></table>
+
+        <table id="maintable" cellspacing="1" cellpadding="0" width="731" align="center" bgcolor="#777777" border="0">
+            <tbody><tr bgcolor="#666666">
+                <td style="height: 18px; width: 4px;">
+                    <font face="Verdana" color="#ffffff" size="2">&nbsp;</font></td>
+                <td style="height: 18px" width="18">
+                    <a onclick="ShowHideLayer(&#39;idGeneralInfo&#39;);" href="javascript:">
+                        <img id="img_idGeneralInfo" onmouseover="javascript:swapImage(&#39;img_idGeneralInfo&#39;,&#39;mouseover&#39;);" onmouseout="javascript:swapImage(&#39;img_idGeneralInfo&#39;,&#39;mouseout&#39;);" height="14" src="./会议室预定系统_files/rightarrow.jpg" width="13" border="0"></a></td>
+                <td style="height: 18px" width="8">
+                </td>
+                <td style="height: 18px" width="696">
+                    <font face="Verdana" color="#ffffff" size="2">预定信息</font></td>
+            </tr>
+            <tr>
+                <td width="729" bgcolor="#ffffff" colspan="4">
+                    <div id="idGeneralInfo">
+                        <table cellspacing="0" cellpadding="0" width="100%" border="0">
+                            <tbody><tr>
+                                <td width="10" bgcolor="#b5cbe7" style="height: 19px">
+                                </td>
+                                <td bgcolor="#b5cbe7" style="height: 19px">
+                                    <font face="arial" color="black" size="2">在下边输入预定人姓名/预定会议室名称/预定会议室类别</font>
+                                    <br>
+                                    <span style="font-size: 10pt; color: #ff0000; font-family: Verdana">温馨提示：无法选择的会议室，为当前用户没有预定权限的会议室，请与会议室所属的子系统管理员联系。</span></td>
+                            </tr>
+                        </tbody></table>
+                        <table style="width: 729px; border-collapse: collapse;" bordercolor="#111111" cellspacing="5" cellpadding="0" width="729" border="0">
+                            <tbody><tr>
+                                <td style="width: 264px; height: 1px;">
+                                    <font face="arial" color="black" size="2">&nbsp;&nbsp;预定人： &nbsp;&nbsp; &nbsp; &nbsp;&nbsp;
+                                        &nbsp;<span id="lbl_owner" style="width:48px;">chengengyu</span></font></td>
+                                <td width="118" style="width: 118px; height: 1px;">
+                                    <span style="font-size: 10pt; font-family: Arial">&nbsp;</span></td>
+                            </tr>
+                            <tr>
+                                <td style="width: 264px; height: 1px;">
+                                    <font color="red" size="2">*</font><font face="arial" color="black" size="2"> 会议室名称：</font><select name="selLocation" id="selLocation" style="font-size: 8pt; width: 152px; font-family: Arial" onchange="changeChart();">
+	<option value="701">A402室</option>
+	<option value="702">407室</option>
+	<option value="704">415室</option>
+	<option value="705">409室</option>
+	<option value="706">盛地101室</option>
+	<option value="701">A402室</option>
+	<option value="702">407室</option>
+	<option value="704">415室</option>
+	<option value="705">409室</option>
+	<option value="706">盛地101室</option>
+	<option value="701">A402室</option>
+	<option value="702">407室</option>
+	<option value="704">415室</option>
+	<option value="705">409室</option>
+	<option value="706">盛地101室</option>
+	<option value="701">A402室</option>
+	<option value="702">407室</option>
+	<option value="704">415室</option>
+	<option value="705">409室</option>
+	<option value="706">盛地101室</option>
+</select>
+                                </td>
+                                <td style="height: 1px">
+                                    <font color="red" size="2">*</font><font face="arial" color="black" size="2"> 会议类别：&nbsp;
+                                    </font><font size="1">
+                                        <select name="selCategory" id="selCategory" style="font-size: 8pt; width: 152px; font-family: Arial">
+	<option value="1">技术讨论</option>
+	<option value="2">总裁办公会议</option>
+	<option value="3">三地视频会议</option>
+	<option value="4">培训会议</option>
+	<option value="5">外部接待会议</option>
+	<option value="6">例会</option>
+</select>
+                                    </font>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td colspan="2" style="height: 8px">
+                                    <font color="red" size="2">*</font><font face="arial" color="black" size="2"> 会议描述：
+                                        &nbsp; </font>
+                                    <input name="textDescription" type="text" id="textDescription" style="font-size: 8pt; width: 508px; font-family: 宋体;
+                                        height: 17px" maxlength="500">
+                                </td>
+                            </tr>
+                        </tbody></table>
+                    </div>
+                </td>
+            </tr>
+            <!-- Dates -->
+            <tr bgcolor="#666666">
+                <td style="height: 18px; width: 4px;">
+                </td>
+                <td style="height: 18px" width="18">
+                    <a onclick="ShowHideLayer(&#39;idDates&#39;);" href="javascript:">
+                        <img id="img_idDates" onmouseover="javascript:swapImage(&#39;img_idDates&#39;,&#39;mouseover&#39;);" onmouseout="javascript:swapImage(&#39;img_idDates&#39;,&#39;mouseout&#39;);" height="14" src="./会议室预定系统_files/rightarrow.jpg" width="13" border="0"></a></td>
+                <td style="height: 18px" width="8">
+                </td>
+                <td style="height: 18px" width="696">
+                    <font face="Verdana" color="#ffffff" size="2">预定日期</font>
+                </td>
+            </tr>
+            <tr>
+                <td width="729" bgcolor="#ffffff" colspan="4">
+                    <div id="idDates">
+                        <table cellspacing="0" cellpadding="0" width="100%" border="0">
+                            <tbody><tr>
+                                <td width="10" bgcolor="#b5cbe7">
+                                </td>
+                                <td bgcolor="#b5cbe7">
+                                    <font face="arial" color="black" size="2">请选择会议室预定日期及使用时间（</font><font face="arial" color="Red" size="2">* 起始时间必须大于终止时间</font><font face="arial" color="black" size="2">）</font></td>
+                            </tr>
+                        </tbody></table>
+                        <table cellspacing="10" cellpadding="0" width="100%" border="0">
+                            <tbody><tr>
+                                <td width="45%">
+                                    <font face="arial" color="black" size="2">&nbsp;&nbsp;起始日期</font><br>
+                                    &nbsp;<select style="font-size: 8pt; font-family: Arial" onchange="javascript:changeComboManually();" name="selStartMonth" >
+                                        <option value="1" selected="">一月</option>
+                                        <option value="2">二月</option>
+                                        <option value="3">三月</option>
+                                        <option value="4">四月</option>
+                                        <option value="5">五月</option>
+                                        <option value="6">六月</option>
+                                        <option value="7">七月</option>
+                                        <option value="8">八月</option>
+                                        <option value="9">九月</option>
+                                        <option value="10">十月</option>
+                                        <option value="11">十一月</option>
+                                        <option value="12">十二月</option>
+                                    </select>
+                                    <select style="font-size: 8pt; font-family: Arial" onchange="javascript:changeComboManually();" name="selStartDay" >
+                                    <option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option><option value="11">11</option><option value="12">12</option><option value="13">13</option><option value="14">14</option><option value="15">15</option><option value="16">16</option><option value="17">17</option><option value="18">18</option><option value="19">19</option><option value="20">20</option><option value="21">21</option><option value="22">22</option><option value="23">23</option><option value="24">24</option><option value="25">25</option><option value="26">26</option><option value="27">27</option><option value="28">28</option><option value="29">29</option><option value="30">30</option><option value="31">31</option></select>
+                                    <select style="font-size: 8pt; font-family: Arial" onchange="javascript:changeComboManually();" name="selStartYear" >
+                                    <option value="2018">2018</option><option value="2019">2019</option><option value="2020">2020</option></select>
+                                    <a onmouseover="if (timeoutId) clearTimeout(timeoutId);window.status=&#39;Show Calendar&#39;;return true;" onclick="g_Calendar.show(event,&#39;frmReservation.startDate&#39;, false, &#39;mm/dd/yyyy&#39;, new Date(),new Date().addDays(day)); return false;" onmouseout="if (timeoutDelay) calendarTimeout();window.status=&#39;&#39;;" href="javascript: void(0);">
+                                        <img height="15" src="./会议室预定系统_files/calendar.gif" width="16" border="0"></a></td>
+                                <td width="13%">
+                                    <font color="black"></font><font face="Arial" size="2">起始时间</font><br>
+                                    <select style="font-size: 8pt; font-family: Arial" onchange="javascript:checkTime();" name="selStartTime">
+                                        <option value="9:00 AM" selected="">9:00 AM</option>
+                                        <option value="9:30 AM">9:30 AM</option>
+                                        <option value="10:00 AM">10:00 AM</option>
+                                        <option value="10:30 AM">10:30 AM</option>
+                                        <option value="11:00 AM">11:00 AM</option>
+                                        <option value="11:30 AM">11:30 AM</option>
+                                        <option value="12:00 PM">12:00 PM</option>
+                                        <option value="12:30 PM">12:30 PM</option>
+                                        <option value="1:00 PM">1:00 PM</option>
+                                        <option value="1:30 PM">1:30 PM</option>
+                                        <option value="2:00 PM">2:00 PM</option>
+                                        <option value="2:30 PM">2:30 PM</option>
+                                        <option value="3:00 PM">3:00 PM</option>
+                                        <option value="3:30 PM">3:30 PM</option>
+                                        <option value="4:00 PM">4:00 PM</option>
+                                        <option value="4:30 PM">4:30 PM</option>
+                                        <option value="5:00 PM">5:00 PM</option>
+                                        <option value="5:30 PM">5:30 PM</option>
+                                        <option value="6:00 PM">6:00 PM</option>
+                                        <option value="6:30 PM">6:30 PM</option>
+                                        <option value="7:00 PM">7:00 PM</option>
+                                        <option value="7:30 PM">7:30 PM</option>
+                                        <option value="8:00 PM">8:00 PM</option>
+                                        <option value="8:30 PM">8:30 PM</option>
+                                        <option value="9:00 PM">9:00 PM</option>
+                                    </select>
+                                </td>
+                                <td width="42%">
+                                    <font face="arial" color="black" size="2">终止时间<br>
+                                    </font>
+                                    <select style="font-size: 8pt; font-family: Arial" onchange="javascript:checkTime();" name="selEndTime">
+                                        <option value="9:00 AM" selected="">9:00 AM</option>
+                                        <option value="9:30 AM">9:30 AM</option>
+                                        <option value="10:00 AM">10:00 AM</option>
+                                        <option value="10:30 AM">10:30 AM</option>
+                                        <option value="11:00 AM">11:00 AM</option>
+                                        <option value="11:30 AM">11:30 AM</option>
+                                        <option value="12:00 PM">12:00 PM</option>
+                                        <option value="12:30 PM">12:30 PM</option>
+                                        <option value="1:00 PM">1:00 PM</option>
+                                        <option value="1:30 PM">1:30 PM</option>
+                                        <option value="2:00 PM">2:00 PM</option>
+                                        <option value="2:30 PM">2:30 PM</option>
+                                        <option value="3:00 PM">3:00 PM</option>
+                                        <option value="3:30 PM">3:30 PM</option>
+                                        <option value="4:00 PM">4:00 PM</option>
+                                        <option value="4:30 PM">4:30 PM</option>
+                                        <option value="5:00 PM">5:00 PM</option>
+                                        <option value="5:30 PM">5:30 PM</option>
+                                        <option value="6:00 PM">6:00 PM</option>
+                                        <option value="6:30 PM">6:30 PM</option>
+                                        <option value="7:00 PM">7:00 PM</option>
+                                        <option value="7:30 PM">7:30 PM</option>
+                                        <option value="8:00 PM">8:00 PM</option>
+                                        <option value="8:30 PM">8:30 PM</option>
+                                        <option value="9:00 PM">9:00 PM</option>
+                                    </select>
+                                </td>
+                            </tr>
+                        </tbody></table>
+                    </div>
+                </td>
+            </tr>
+            <!-- Reserve Room -->
+            <tr bgcolor="#666666" id="trRepeatTitle" style="display: none">
+                <td width="4">
+                </td>
+                <td width="18">
+                    <a onclick="ShowHideLayer(&#39;idReserveRoom&#39;);" href="javascript:">
+                        <img id="img_idReserveRoom" onmouseover="javascript:swapImage(&#39;img_idReserveRoom&#39;,&#39;mouseover&#39;);" onmouseout="javascript:swapImage(&#39;img_idReserveRoom&#39;,&#39;mouseout&#39;);" height="14" src="./会议室预定系统_files/rightarrow.jpg" width="13" border="0"></a></td>
+                <td width="8">
+                </td>
+                <td width="696">
+                    <font face="Verdana" color="#ffffff" size="2">重复预定</font></td>
+            </tr>
+            <tr id="trRepeatInfo" style="display: none">
+                <td width="729" bgcolor="#ffffff" colspan="4">
+                    <div id="idReserveRoom">
+                        <table cellspacing="0" cellpadding="0" width="100%" border="0">
+                            <tbody><tr>
+                                <td width="10" bgcolor="#b5cbe7" style="height: 19px">
+                                </td>
+                                <td bgcolor="#b5cbe7" style="height: 19px">
+                                    <font face="arial" color="black" size="2">选择重复预定类别及日期(如果需要)</font>
+                                </td>
+                            </tr>
+                        </tbody></table>
+                        <table id="Unknowtable" cellspacing="10" cellpadding="0" width="100%" border="0">
+                            <tbody><tr>
+                                <td width="100%">
+                                    <table id="AutoNumber1" style="border-collapse: collapse" bordercolor="#111111" height="118" cellspacing="0" cellpadding="0" width="100%" border="0">
+                                        <tbody><tr>
+                                            <td width="3%" height="20">
+                                                <input style="font-size: 8pt; font-family: Arial" onclick="javascript:UncheckRepeatOption();" type="radio" checked="" value="1" name="RepeatType"></td>
+                                            <td width="97%" height="20">
+                                                &nbsp;<font face="arial" color="black" size="2"> 不需要重复使用</font></td>
+                                        </tr>
+                                        <tr>
+                                            <td width="3%" style="height: 24px">
+                                                <input style="font-size: 8pt; font-family: Arial" onclick="javascript:checkRepeatOption();" type="radio" value="2" name="RepeatType"></td>
+                                            <td width="97%" style="height: 24px">
+                                                &nbsp;<font face="Arial"><font size="2">&nbsp;<font color="black">每天都需要使用</font></font></font></td>
+                                        </tr>
+                                        <tr>
+                                            <td width="3%" height="25">
+                                                <input style="font-size: 8pt; font-family: Arial" onclick="javascript:checkRepeatOption();" type="radio" value="3" name="RepeatType"></td>
+                                            <td width="97%" height="25">
+                                                &nbsp;<font face="Arial"><font size="2"><font color="black"> 每&nbsp; </font></font></font>
+                                                <font color="black" size="1">
+                                                    <select style="font-size: 8pt; font-family: Arial" onchange="javascript:ChangeChoice(3);" size="1" name="RepeatWeekCombo">
+                                                        <option value="1" selected="">1</option>
+                                                        <option value="2">2</option>
+                                                        <option value="3">3</option>
+                                                        <option value="4">4</option>
+                                                    </select>
+                                                </font><font face="Arial" color="black" size="2">&nbsp; 周 &nbsp;
+                                                    <input onclick="javascript:ChangeChoice(3);" type="checkbox" value="1" name="DayOfWeek">星期日
+                                                    <input onclick="javascript:ChangeChoice(3);" type="checkbox" value="2" name="DayOfWeek">星期一
+                                                    <input onclick="javascript:ChangeChoice(3);" type="checkbox" value="3" name="DayOfWeek">星期二
+                                                    <input onclick="javascript:ChangeChoice(3);" type="checkbox" value="4" name="DayOfWeek">星期三
+                                                    <input onclick="javascript:ChangeChoice(3);" type="checkbox" value="5" name="DayOfWeek">星期四
+                                                    <input onclick="javascript:ChangeChoice(3);" type="checkbox" value="6" name="DayOfWeek">星期五
+                                                    <input onclick="javascript:ChangeChoice(3);" type="checkbox" value="7" name="DayOfWeek">星期六</font></td>
+                                        </tr>
+                                        <tr>
+                                            <td width="3%" height="27">
+                                                <input style="font-size: 8pt; font-family: Arial" onclick="javascript:checkRepeatOption();" type="radio" value="4" name="RepeatType"></td>
+                                            <td width="97%" height="27">
+                                                &nbsp;<font face="arial" color="black" size="2"> 每
+                                                    <select style="font-size: 8pt; font-family: Arial" onchange="javascript:ChangeChoice(4);" size="1" name="RepeatMonth">
+                                                        <option selected="">1</option>
+                                                        <option>2</option>
+                                                        <option>3</option>
+                                                        <option>4</option>
+                                                    </select>
+                                                    &nbsp; 个月&nbsp;&nbsp;&nbsp;
+                                                    <select style="font-size: 8pt; font-family: Arial" onchange="javascript:ChangeChoice(4);" size="1" name="RepeatTimesOfWeek">
+                                                        <option selected="">第一个</option>
+                                                        <option>第二个</option>
+                                                        <option>第三个</option>
+                                                        <option>第四个</option>
+                                                    </select>
+                                                    &nbsp; &nbsp;
+                                                    <select style="font-size: 8pt; font-family: Arial" onchange="javascript:ChangeChoice(4);" size="1" name="RepeatDateName">
+                                                        <option selected="">星期日</option>
+                                                        <option>星期一</option>
+                                                        <option>星期二</option>
+                                                        <option>星期三</option>
+                                                        <option>星期四</option>
+                                                        <option>星期五</option>
+                                                        <option>星期六</option>
+                                                    </select>
+                                                </font>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td width="3%" height="22">
+                                                <input style="font-size: 8pt; font-family: Arial" onclick="javascript:checkRepeatOption();" type="radio" value="5" name="RepeatType"></td>
+                                            <td width="97%" height="22">
+                                                &nbsp;<font face="Arial" size="2"> 每月同一时间需要使用</font></td>
+                                        </tr>
+                                    </tbody></table>
+                                    <br>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td width="100%" bgcolor="#bbbbbb" style="height: 1px">
+                                    <font face="宋体"></font>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td width="100%">
+                                    <input style="font-size: 8pt; font-family: Arial" onclick="javascript:checkReadOnly();" readonly="" type="radio" value="YES" name="RepeatUntil">
+                                    <font face="Arial"><font size="2">预定到 <font color="black"></font></font></font>
+                                    <select style="font-size: 8pt; font-family: Arial" onchange="javascript:changeComboManually();" name="selUntilMonth">
+                                        <option value="1" selected="">一月</option>
+                                        <option value="2">二月</option>
+                                        <option value="3">三月</option>
+                                        <option value="4">四月</option>
+                                        <option value="5">五月</option>
+                                        <option value="6">六月</option>
+                                        <option value="7">七月</option>
+                                        <option value="8">八月</option>
+                                        <option value="9">九月</option>
+                                        <option value="10">十月</option>
+                                        <option value="11">十一月</option>
+                                        <option value="12">十二月</option>
+                                    </select>
+                                    <select style="font-size: 8pt; font-family: Arial" onchange="javascript:changeComboManually();" name="selUntilDay">
+                                    <option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option><option value="11">11</option><option value="12">12</option><option value="13">13</option><option value="14">14</option><option value="15">15</option><option value="16">16</option><option value="17">17</option><option value="18">18</option><option value="19">19</option><option value="20">20</option><option value="21">21</option><option value="22">22</option><option value="23">23</option><option value="24">24</option><option value="25">25</option><option value="26">26</option><option value="27">27</option><option value="28">28</option><option value="29">29</option><option value="30">30</option><option value="31">31</option></select>
+                                    <select style="font-size: 8pt; font-family: Arial" onchange="javascript:changeComboManually();" name="selUntilYear">
+                                    <option value="2018">2018</option><option value="2019">2019</option><option value="2020">2020</option></select>
+                                    <a onmouseover="if (timeoutId) clearTimeout(timeoutId);window.status=&#39;Show Calendar&#39;;return true;" onclick="g_Calendar.show(event,&#39;frmReservation.endDate&#39;, false, &#39;mm/dd/yyyy&#39;,new Date(frmReservation.startDate.value),new Date().addDays(365*2)); return false;" onmouseout="if (timeoutDelay) calendarTimeout();window.status=&#39;&#39;;" href="javascript: void(0);">
+                                        <img height="15" src="./会议室预定系统_files/calendar.gif" width="16" border="0"></a></td>
+                            </tr>
+                        </tbody></table>
+                    </div>
+                </td>
+            </tr>
+            <!-- Reminder -->
+            <!--				<tr bgcolor="#EEEEEE">					<td>						<a href="#" onclick="ShowHideLayer('idReminder');"><img src="images/downarrow.jpg" border="0"></a>                        <b>						<font face="arial" size="2" color="black">Reminder</font>                        </b>					</td>				</tr>				<tr>					<td bgcolor="#FFFFFF">						<div id="idReminder" style="display:">							<table border="0" cellspacing="0" cellpadding="0" width="100%">							<tr>								<td bgcolor="#BBBBBB" width="10"></td>								<td bgcolor="#BBBBBB">									<font face="arial" size="2" color="black">Select the reminder you want.</font>								</td>							</tr>							</table>							<table border="0" cellspacing="10" cellpadding="0" width="100%">								<tr>									<td width="100%">										<input type="checkbox" name="MailReminder" style="font-family: Arial; font-size: 8pt" value="1">										<img src="images/mail.gif" border="0" WIDTH="24" HEIGHT="18">										<font face="arial" size="2" color="black">Send me e-mail on the day of this event.</font>									</td>								</tr>							</table>						</div>					</td>				</tr>								-->
+            <!--here insert big chart-->
+            <tr bgcolor="#666666">
+                <td style="height: 20px; width: 4px;">
+                </td>
+                <td width="18" style="height: 20px">
+                    <a onclick="ShowHideLayer(&#39;idBigChart&#39;);" href="javascript:">
+                        <img id="img_idBigChart" onmouseover="javascript:swapImage(&#39;img_idBigChart&#39;,&#39;mouseover&#39;);" onmouseout="javascript:swapImage(&#39;img_idBigChart&#39;,&#39;mouseout&#39;);" height="14" src="./会议室预定系统_files/rightarrow.jpg" width="13" border="0"></a></td>
+                <td width="8" style="height: 20px">
+                </td>
+                <td width="696" style="height: 20px">
+                    <font face="Verdana" color="#ffffff" size="2">会议预定列表&nbsp; </font>
+                </td>
+            </tr>
+            <tr bgcolor="white">
+                <td style="width: 4px; height: 6px">
+                </td>
+                <td style="font-size: smaller; height: 6px; color: Red" colspan="3">
+                    * 鼠标移动至会议室名称上方可以查看会议室配置信息，鼠标移动到彩色方格上方可以查看预定信息</td>
+            </tr>
+            <tr>
+                <td id="bigChart" width="729" bgcolor="#ffffff" colspan="4">
+                    <font face="宋体"></font>
+                </td>
+            </tr>
+            <!--Here's delegation-->
+            <!--			<tr bgcolor="#EEEEEE">					<td>						<a href="#" onclick="ShowHideLayer('idDelegation');"><img src="images/downarrow.jpg" border="0"></a>                        <b><font face="arial" size="2">Permission Delegation</font>                        </b>					</td>			</tr>			<tr>				<td bgcolor="#FFFFFF" id=bigChart>					<div id="idDelegation" style="display:">					  <iframe src=></iframe>					</div>				</td>			</tr>			-->
+        </tbody></table>
+        <font face="Verdana" color="#ffffff" size="2"></font><font face="Verdana" color="#ffffff" size="2"></font><font face="Verdana" color="#ffffff" size="2"></font>
+        <table id="AutoNumber2" style="border-collapse: collapse" bordercolor="#111111" cellspacing="10" cellpadding="0" width="100%" border="0">
+            <tbody><tr>
+                
+                <td align="right" width="33%">
+                    <a href="http://itgweb/RoomReservationV2/myroom_back.aspx?subsysid=0" id="aReturn">
+                        <img src="./会议室预定系统_files/button_return.gif" align="right" border="0"></a></td>
+                <td align="center" width="33%">
+                    <a href="javascript:if(checkform()){frmReservation.submit();}" id="submit">
+                        <img src="./会议室预定系统_files/button_submit.gif" border="0"></a></td>
+                <td align="left" width="34%">
+                    <a href="javascript:frmReservation.reset();">
+                        <img src="./会议室预定系统_files/button_cancel.gif" border="0"></a></td>
+                <input type="hidden" name="hfsubsysid" id="hfsubsysid" value="0">
+                <input type="hidden" name="hfRoomsid" id="hfRoomsid" value="401;402;403;501;603;605;607;701;702;704;705;706;801;1001;1201;1301;1302;1401;1501">
+            </tr>
+        </tbody></table>
+    
+<script language="JavaScript">
+DumpbigChart("2018/7/28");
+</script>
+</form>
+    <font face="宋体">
+            
+<font face="宋体"></font>
+
+        </font><table id="Table3" width="100%">
+        <tbody><tr>
+            <td>
+                <img src="./会议室预定系统_files/line.gif" width="100%">
+                <a href="http://itgweb/RoomReservationV2/roomreservation_back.aspx?subsysid=0"></a>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <font face="verdana,arial,helvetica" size="1">最后更新: 2013年4月15日</font></td>
+        </tr>
+        
+    </tbody></table>
+
+
+</body></html>

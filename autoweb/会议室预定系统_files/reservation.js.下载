@@ -1,0 +1,452 @@
+				function ShowHideLayer(layername)
+				{
+					if(document.all(layername).style.display=="")
+					{
+    					document.all(layername).style.display="none";
+					}
+					else
+					{
+    					document.all(layername).style.display="";
+					}
+					swapImage(layername,"click");
+					checkImg();
+				}
+				
+				var MonthArr=new Array('January','February','March','April','May','June','July','August','September','October','November','December');
+				var MonthDay=new Array(31,28,31,30,31,30,31,31,30,31,30,31);
+				m_todayDate=new Date();
+				todayYear=m_todayDate.getFullYear();
+				
+				if(((todayYear%4==0)&&(todayYear%100!=0))||(todayYear%400==0))
+				{
+					MonthDay[1]=29;
+				}
+				else
+				{
+					MonthDay[1]=28;
+				}
+			
+				/*
+				init all date controlers as the combobox of year, month, day; 
+				and set the date to today.
+				*/
+				
+				function initDateControlers()
+				{
+				  todayDate=new Date();
+				  todayMonth=todayDate.getMonth();
+				  todayDay=todayDate.getDate();
+				  todayYear=todayDate.getFullYear();
+				   
+				  document.frmReservation.selStartMonth.selectedIndex=todayMonth;
+				  for (i=1;i<=MonthDay[todayMonth];i++)
+				   {
+					 var m_option=document.createElement("OPTION");
+				     document.frmReservation.selStartDay.options.add(m_option);
+				     m_option.value=i;
+				     m_option.innerText=i; 
+				   }
+				  document.frmReservation.selStartDay.selectedIndex= todayDay-1; 
+				  
+				  for (i=0;i<=2; i++)
+				  {
+					 var m_option=document.createElement("OPTION");
+				     document.frmReservation.selStartYear.options.add(m_option);
+				     m_option.value=i+todayYear;
+				     m_option.innerText=i+todayYear; 
+				  }   
+				  document.frmReservation.selStartYear.selectedIndex=0;
+				  
+				  document.frmReservation.selUntilMonth.selectedIndex=todayMonth;
+				  for (i=1;i<=MonthDay[todayMonth];i++)
+				   {
+					 var m_option=document.createElement("OPTION");
+				     document.frmReservation.selUntilDay.options.add(m_option);
+				     m_option.value=i;
+				     m_option.innerText=i; 
+				   }
+				  document.frmReservation.selUntilDay.selectedIndex= todayDay-1; 
+				  
+				  for (i=0;i<=2; i++)
+				  {
+					 var m_option=document.createElement("OPTION");
+				     document.frmReservation.selUntilYear.options.add(m_option);
+				     m_option.value=i+todayYear;
+				     m_option.innerText=i+todayYear; 
+				  }   
+				  document.frmReservation.selUntilYear.selectedIndex=0;
+				  
+				  var pdt=new Date(); 
+				  document.frmReservation.startDate.value=(pdt.getMonth()+1) + "/" + (pdt.getDate()) + "/" +pdt.getFullYear();
+				  document.frmReservation.endDate.value=(pdt.getMonth()+1) + "/" + (pdt.getDate()) + "/" +pdt.getFullYear();
+				  
+				  ResetPostBack();
+				  setDiv();
+				 // DumpSmallChart();
+				  DumpbigChart();
+				  return true;
+				}
+				
+				function changeComboDate()
+				{
+				 
+				 var newStart=new Date(document.frmReservation.startDate.value);
+				 var newEnd=new Date(document.frmReservation.endDate.value);
+				 if(newStart>newEnd)
+				   {
+				     document.frmReservation.endDate.value=newStart;
+				     newStart=new Date(document.frmReservation.startDate.value);
+					 newEnd=new Date(document.frmReservation.endDate.value);
+				   }
+				 newTodayDay=newStart.getDate();
+				 newTodayMonth=newStart.getMonth();
+				 newTodayYear=newStart.getFullYear();
+				 
+				 //fix Bug by LiangMing for 2.30 and so on
+				 
+				 //if(newTodayDay>MonthDay[newTodayMonth-1])
+				 //  newTodayDay = MonthDay[newTodayMonth-1];
+				 
+				 
+				 var t_today=new Date();
+				 t_Year=t_today.getFullYear(); 
+				 document.frmReservation.selStartDay.selectedIndex= newTodayDay-1; 
+				 document.frmReservation.selStartMonth.selectedIndex=newTodayMonth;
+				 document.frmReservation.selStartYear.selectedIndex=newTodayYear-t_Year;  
+				 
+				
+				 newTodayDay=newEnd.getDate();
+				 newTodayMonth=newEnd.getMonth();
+				 newTodayYear=newEnd.getFullYear();
+				 
+				 //fix Bug by LiangMing for 2.30 and so on
+				 
+				 //if(newTodayDay>MonthDay[newTodayMonth-1])
+				 //  newTodayDay = MonthDay[newTodayMonth-1];
+				 
+				 document.frmReservation.selUntilDay.selectedIndex= newTodayDay-1; 
+				 document.frmReservation.selUntilMonth.selectedIndex=newTodayMonth;
+				 document.frmReservation.selUntilYear.selectedIndex=newTodayYear-t_Year;  
+				 
+				// DumpSmallChart(document.frmReservation.startDate.value,document.frmReservation.selLocation.value)
+				 DumpbigChart(document.frmReservation.startDate.value);
+				 return true;     
+				}
+				
+				function changeComboManually()
+				{
+					StartYear=document.frmReservation.selStartYear.value;
+					StartMonth=document.frmReservation.selStartMonth.value;
+					StartDay=document.frmReservation.selStartDay.value;
+										
+					if(StartDay>=MonthDay[StartMonth-1])
+					  StartDay=MonthDay[StartMonth-1];
+					
+					EndYear=document.frmReservation.selUntilYear.value;
+					EndMonth=document.frmReservation.selUntilMonth.value;
+					EndDay=document.frmReservation.selUntilDay.value;
+					
+					if(EndDay>=MonthDay[EndMonth-1])
+					  EndDay=MonthDay[EndMonth-1];
+					  
+					
+					//edit by lijun 2007-2-1
+					var j=document.frmReservation.selStartDay.options.length;
+					var startMonthDay = MonthDay[StartMonth -1];
+					if(j > startMonthDay)
+					{
+						for(k=startMonthDay;k<j;k++)
+						{
+							document.frmReservation.selStartDay.options.remove(startMonthDay);
+						}
+					}
+					else
+					{
+						for (i=j;i<startMonthDay;i++)
+						{
+							var m_option=document.createElement("OPTION");
+							document.frmReservation.selStartDay.options.add(m_option);
+							m_option.value=i + 1;
+							m_option.innerText=i + 1;
+						}
+					}
+					document.frmReservation.selStartDay.selectedIndex= StartDay-1;
+					
+					j=document.frmReservation.selUntilDay.options.length;
+					endMonthDay = MonthDay[EndMonth -1];
+					if(j > endMonthDay)
+					{
+						for(k=endMonthDay;k<j;k++)
+						{
+							document.frmReservation.selUntilDay.options.remove(endMonthDay);
+						}
+					}
+					else
+					{
+						for (i=j;i<endMonthDay;i++)
+						{
+							var m_option=document.createElement("OPTION");
+							document.frmReservation.selUntilDay.options.add(m_option);
+							m_option.value=i + 1;
+							m_option.innerText=i + 1;
+						}
+					}
+					document.frmReservation.selUntilDay.selectedIndex= EndDay-1;
+					//end edit by lijun 2007-2-1
+					
+					
+					var ComboStart=StartMonth + "/" + StartDay + "/" + StartYear;  
+					var ComboEnd=EndMonth + "/" + EndDay + "/" + EndYear;
+					
+					
+					
+					//var ComboStart=document.frmReservation.selStartMonth.value + "/" + document.frmReservation.selStartDay.value + "/" + document.frmReservation.selStartYear.value;
+					//var ComboEnd=document.frmReservation.selUntilMonth.value + "/" + document.frmReservation.selUntilDay.value + "/" + document.frmReservation.selUntilYear.value;
+					
+					document.frmReservation.startDate.value = ComboStart;
+					document.frmReservation.endDate.value = ComboEnd;
+					if (Date.parse(ComboStart)>Date.parse(ComboEnd))
+					{
+						document.frmReservation.endDate.value=document.frmReservation.startDate.value;
+						changeComboDate();
+						return;
+					}  
+					
+					
+					//Fix Bug For 2.30 by LiangMing
+					
+					 changeComboDate(); 
+					 DumpSmallChart(document.frmReservation.startDate.value,document.frmReservation.selLocation.value)
+					 DumpbigChart(document.frmReservation.startDate.value);
+				}
+				
+				function checkTime()
+				{
+				  if(document.frmReservation.selStartTime.selectedIndex>document.frmReservation.selEndTime.selectedIndex)
+				  {
+				    document.frmReservation.selEndTime.selectedIndex=document.frmReservation.selStartTime.selectedIndex;
+				  }    
+				}
+				
+				function checkRepeatOption()
+				{
+					document.frmReservation.RepeatUntil.checked=true;
+					document.frmReservation.RepeatUntil.setAttribute("ReadOnly",true);      
+				}
+				
+				function UncheckRepeatOption()
+				{
+					document.frmReservation.RepeatUntil.checked=false; 
+					document.frmReservation.RepeatUntil.setAttribute("ReadOnly",true);    
+				}
+				
+				function checkReadOnly()
+				{
+				  if(document.frmReservation.RepeatType[0].checked)
+				   {
+				     document.frmReservation.RepeatUntil.checked=false;
+				   }  
+				}
+				
+				
+				
+				
+		function ResetStartDate(pstartDate)
+		 {
+		   if ((pstartDate=="undefined")||(pstartDate==""))
+		     return false;
+		   pd=new Date(pstartDate);
+		   pdateDay=pd.getDate();
+		   pdateMonth=pd.getMonth();
+		   pdateYear=pd.getFullYear();
+		        
+		    var t_today=new Date();
+			t_Year=t_today.getFullYear(); 
+			document.frmReservation.selStartDay.selectedIndex= pdateDay-1; 
+			document.frmReservation.selStartMonth.selectedIndex=pdateMonth;
+			document.frmReservation.selStartYear.selectedIndex=pdateYear-t_Year;    
+			document.frmReservation.startDate.value=pstartDate;   
+			return true;
+		 }
+		 
+		 function ResetEndDate(pendDate)
+		 {
+		   if ((pendDate=="undefined")||(pendDate==""))
+		     return false;
+		   pd=new Date(pendDate);
+		   pdateDay=pd.getDate();
+		   pdateMonth=pd.getMonth();
+		   pdateYear=pd.getFullYear();
+		        
+		    var t_today=new Date();
+			t_Year=t_today.getFullYear(); 
+			document.frmReservation.selUntilDay.selectedIndex= pdateDay-1; 
+			document.frmReservation.selUntilMonth.selectedIndex=pdateMonth;
+			document.frmReservation.selUntilYear.selectedIndex=pdateYear-t_Year;    
+			document.frmReservation.endDate.value=pendDate;   
+			return true;
+		 }
+		 
+		 function ResetRepeatType(typeID)
+		 {
+		   if(typeID=="undefined")
+			 return false; 
+		   if((typeID<=4)&&(typeID>=0))
+		    {
+		      document.frmReservation.RepeatType[typeID-1].checked=true;   
+		      if(typeID!=1)
+		      {
+		        document.frmReservation.RepeatUntil.checked=true;   
+		      }
+		    }
+		 }
+		 
+		 function ResetStartTime(sTime)
+		 {
+		   if ((sTime=="undefined")||(sTime==""))
+		     return false;
+		   for(i=0;i<document.frmReservation.selStartTime.options.length;i++)
+		    {
+		      if(document.frmReservation.selStartTime.options[i].text==sTime)
+		        {
+		         document.frmReservation.selStartTime.selectedIndex=i;
+		         return;
+		         }
+		    } 
+		 }
+		 
+		 function ResetEndTime(sTime)
+		 {
+		   if ((sTime=="undefined")||(sTime==""))
+		     return false;
+		   for(i=0;i<document.frmReservation.selEndTime.options.length;i++)
+		    {
+		      if(document.frmReservation.selEndTime.options[i].text==sTime)
+		        {
+		         document.frmReservation.selEndTime.selectedIndex=i;
+		         return;
+		         }
+		    } 
+		 }
+		 
+		 function ResetLocation(pLocation)
+		 {
+		   if((pLocation=="undefined")||(pLocation==""))
+			return false;
+		    for(i=0;i<document.frmReservation.selLocation.options.length;i++)
+		    {
+		      if(document.frmReservation.selLocation.options[i].text==pLocation)
+		        {
+		         document.frmReservation.selLocation.selectedIndex=i;
+		         return;
+		         }
+		    } 
+		 }
+		 
+		 function ResetCategory(pCategory)
+		 {
+		   if((pCategory=="undefined")||(pCategory==""))
+			return false;
+		    for(i=0;i<document.frmReservation.selCategory.options.length;i++)
+		    {
+		      if(document.frmReservation.selCategory.options[i].text==pCategory)
+		        {
+		         document.frmReservation.selCategory.selectedIndex=i;
+		         return;
+		         }
+		    } 
+		 }
+		 
+		 function ResetDescription(pDescription)
+		 {
+		   if((pDescription=="undefined")||(pDescription==""))
+			return false;
+		   document.frmReservation.textDescription.value= pDescription; 
+		 }
+		 
+		 function ResetRepeatWeek(pWeekID)
+		  {
+		    if(pWeekID=="undefined")
+			 return false; 
+		   if((pWeekID<=3)&&(pWeekID>=0))
+		    {
+		      document.frmReservation.RepeatWeekCombo.selectedIndex=pWeekID-1;   
+		    }
+		  }
+		  
+		  function ResetDayOfWeek(resultStr)
+		  {
+		  if((resultStr=="undefined")||(resultStr==""))
+			return false;
+		    var s=new String(resultStr);
+		    var ss;
+		    ss=s.split(", ");
+		    
+		    for(i=0;i<=ss.length-1; i++)
+		      {
+		        document.frmReservation.DayOfWeek[parseInt(ss[i])-1].checked=true;   
+		      }  
+		  }
+		  
+		  function ResetRepeatTimesOfWeek(pRepeatTimesOfWeek)
+		  {
+			if((pRepeatTimesOfWeek=="undefined")||(pRepeatTimesOfWeek==""))
+				return false;
+		    for(i=0;i<document.frmReservation.RepeatTimesOfWeek.options.length;i++)
+		    {
+		      if(document.frmReservation.RepeatTimesOfWeek.options[i].text==pRepeatTimesOfWeek)
+		        {
+		         document.frmReservation.RepeatTimesOfWeek.selectedIndex=i;
+		         return;
+		         }
+		    } 
+		  }
+		  
+		  function ResetRepeatDateName(pRepeatDateName)
+		  {
+			if((pRepeatDateName=="undefined")||(pRepeatDateName==""))
+				return false;
+		    for(i=0;i<document.frmReservation.RepeatDateName.options.length;i++)
+		    {
+		      if(document.frmReservation.RepeatDateName.options[i].text==pRepeatDateName)
+		        {
+		         document.frmReservation.RepeatDateName.selectedIndex=i;
+		         return;
+		         }
+		    } 
+		  }
+		  
+		  function ResetRepeatMonth(pRepeatMonth)
+		  {
+		    if(pRepeatMonth=="undefined")
+			 return false; 
+		   if((pRepeatMonth<=3)&&(pRepeatMonth>=0))
+		    {
+		      document.frmReservation.RepeatMonth.selectedIndex=pRepeatMonth-1;   
+		    }
+		  }
+		  
+		  function ResetReminder(pReminder)
+		  {
+		   if(pReminder=="undefined")
+			 return false; 
+		    //document.frmReservation.MailReminder.checked=pReminder;  
+		  }
+		  
+		  
+		  
+		 function ResetDelegation(palias)
+		 {
+		   if ((palias=="undefined")||(palias==""))
+		     return false;
+		  
+		   for(i=0;i<document.frmReservation.selDelegate.options.length;i++)
+		    {
+		      if(document.frmReservation.selDelegate.options[i].text==palias)
+		        {
+		         document.frmReservation.selDelegate.selectedIndex=i;
+		         return;
+		         }
+		    }
+		  
+		 } 
