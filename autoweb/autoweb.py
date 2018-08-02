@@ -80,7 +80,7 @@ def setHtml(roomDay, config):
     b.select('selStartDay', roomDay.day)
     b.select('selStartTime', config['startTime'])
     b.select('selEndTime', config['endTime'])
-    #b.click_link_by_id('submit')
+    b.click_link_by_id('submit')
 
 if __name__ =="__main__":
     roomDay = getDate()
