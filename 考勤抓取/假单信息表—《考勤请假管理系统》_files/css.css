@@ -1,0 +1,254 @@
+/* CSS Document */
+body 
+{
+    font-size:12px;
+    line-height:20px;
+    margin:0;
+    font-family:Times New Roman,"宋体", arial;
+    background-color:#FFFFFF;    
+}
+td,th
+{
+    font-size:12px;
+    line-height:25px;
+}
+a:link {
+	color: #000000;
+	text-decoration: none;
+}
+a:visited {
+	text-decoration: none;
+	color: #000000;
+}
+a:hover {
+	text-decoration: underline;
+	color: #FF0000;
+}
+a:active {
+	text-decoration: none;
+	color: #FF0000;
+}
+.f12B
+{
+font-size:12px;
+font-weight:bold;
+}
+.f13
+{
+font-size:14px;
+line-height:18px;
+}
+.f14
+{
+font-size:14px;
+line-height:20px;
+}
+.f14B
+{
+font-size:14px;
+line-height:30px;
+font-weight:bold;
+}
+.f16
+{
+font-size:16px;
+line-height:32px;
+}
+.f16B
+{
+font-size:16px;
+line-height:32px;
+font-weight:bold;
+}
+.lineh20 {
+line-height:20px;
+}
+.lineh25 {
+line-height:25px;
+}
+.lineh30 {
+line-height:30px;
+}
+.lineh35 {
+line-height:35px;
+}
+.tablea 
+{
+    background-color:#999999;
+}
+.tda
+{
+    background-color:#ffffff;
+}
+.tdb
+{
+    background-color:#E3E3E3;
+}
+.btn1
+{
+	background-image:url(btn1.gif);
+	width:90px;
+	height:25px;	
+	border:0;
+	color:#000000;
+	font-size:12px;
+	font-weight:bold;
+	background-color:#F65F04;
+}
+.btn2
+{
+	background-image:url(btn2.gif);
+	width:90px;
+	height:25px;	
+	border:0;
+	color:#0000FF;
+	font-size:12px;
+	font-weight:bold;
+	background-color:#77BCE2;
+}
+.btn3
+{
+	background-image:url(btn3.gif);
+	width:250px;
+	height:25px;	
+	border:0;
+	color:#0000FF;
+	font-size:14px;
+	font-weight:bold;
+	background-color:#77BCE2;
+}
+.btnLinkBtn
+{
+	background-color:#B3BDDA;
+	padding:5px 15px 5px 15px;
+	font-size:14px;
+	text-align:center;
+}
+.border1
+{
+	border: solid 1px #9c9c9c;
+	padding:5px;
+}
+.tbborder1
+{
+	border:solid 1px #9c9c9c;
+}
+.tbheight30
+{
+	height:30px;
+	font-size:18px;
+	vertical-align:middle;
+	color:#091E79;
+}
+.tbh15w120
+{
+	height:15px;
+	font-size:12px;
+	width:120px;
+}
+.fred
+{
+	color:Red;
+}
+.fwhite
+{
+	color:White;
+}
+.bgwhite
+{
+	background-color:White;
+}
+
+
+
+
+
+/*专门针对页头滑动框的*/
+#nav *{margin:0;padding:0;border:0;}
+#nav {
+  line-height: 24px;  list-style-type: none; margin:0;padding:0;border:0;
+} 
+#nav a {
+ display: block; width: 80px; text-align:center;
+}
+ 
+#nav a:link  {
+ color:#FFFFFF; text-decoration:none;
+}
+#nav a:visited  {
+ color:#FFFFFF;text-decoration:none;
+}
+#nav a:hover  {
+ color:#FFF;text-decoration:none;font-weight:bold;
+}
+ 
+#nav li {
+ float: left; width: 80px; background-image:url(bg3.gif);
+ color:#FFFFFF;
+}
+#nav li a:hover{
+}
+#nav li ul {
+ line-height: 27px;  list-style-type: none;text-align:left;
+ left: -999em; width: 120px; position: absolute; 
+}
+#nav li ul li{
+ float: left; width: 120px;
+ background: #F6F6F6; 
+} 
+#nav li ul a{
+ display: block; width: 120px;text-align:left;padding-left:15px; background-image:url(bg4.gif);
+}
+ 
+#nav li ul a:link  {
+ color:#666; text-decoration:none;
+}
+#nav li ul a:visited  {
+ color:#666;text-decoration:none;
+}
+#nav li ul a:hover  {
+ color:#F3F3F3;text-decoration:none;font-weight:normal;
+ background:#3389CC;
+}
+ 
+#nav li:hover ul {
+ left: auto;
+}
+#nav li.sfhover ul {
+ left: auto;
+}
+
+
+
+
+/*登录*/
+#LOGIN .tabon {
+ background-color: #ffffff;
+ border-top: 1px solid #e3e3e3;border-left: 1px solid #e3e3e3;
+ color: #DB5B6F;
+ font-weight: bold;
+}
+#LOGIN .taboff {
+ background-color: #C1D8F0;
+ border-top: 1px solid #e3e3e3;border-left: 1px solid #e3e3e3;border-bottom: 1px solid #e3e3e3;
+ color: #666666;
+ font-weight: bold;
+}
+#LOGIN .tdbody {
+ border-bottom: 1px solid #e3e3e3;border-right: 1px solid #e3e3e3;border-left: 1px solid #e3e3e3;
+ line-height:50px;
+ background-color: #ffffff;
+}
+#LOGIN .tdbody2 {
+ border-right: 1px solid #e3e3e3;border-left: 1px solid #e3e3e3;
+ line-height:50px;
+ background-color: #ffffff;
+}
+.modalBackground {
+	background-color:Gray;
+	filter:alpha(opacity=70);
+	opacity:0.7;
+}
+.masterBody {
+	font-size: 12px; background-image: url(02.jpg); margin: 5px 0 0 0; color: #333333; background-repeat: repeat-x; background-color: #014471;
+}

@@ -1,0 +1,250 @@
+﻿// JScript 文件
+function show(url,width,height)
+{
+    window.showModalDialog(url,"dialog",'dialogWidth='+width+'px;dialogHeight='+height+'px;center:yes;help=no;resizable:no;status:no;scroll=no;menubar=no;titlebar=no;toolbar=no');
+}
+function pageopen(url,width,height,title,x,y) {
+window.open(''+url,title,'top='+x+',left='+y+',width='+width+',height='+height+',status=no,resizable=yes,scrollbars=auto');
+}
+function pageopenscrollbars(url,width,height,title,x,y) {
+window.open(''+url,title,'top='+x+',left='+y+',width='+width+',height='+height+',status=no,resizable=yes,scrollbars=yes');
+}
+
+function selectuser_onclick(ctrlobj,valueobj,n,type)
+{
+    xposition = 0;
+    yposition = 0;
+    if ((parseInt(navigator.appVersion) >= 4 ))
+    {
+        xposition = (screen.width - 500) / 2;
+        yposition = (screen.height - 400) / 2;
+    }
+    tourl = "../SYS_UserSelect.aspx?type="+type+"&userids=";
+    if(n==1)
+    {
+        tourl = "../SYS_UserSelect_Dan.aspx?type="+type+"&userids=";
+    }
+    
+    var userids=document.getElementById(valueobj).value;
+
+    var sRet = window.showModalDialog(tourl+userids, ""
+            , "dialogWidth:400px; dialogHeight:500px; dialogLeft:"
+            + xposition + "px; dialogTop:"
+            + yposition + "px; status:no;scroll:no;resizable=no;");
+
+    if (sRet != null)
+    {
+        var aNameValue = sRet.split("$")[0].split(",");
+        var aUserGuidValue = sRet.split("$")[1].split(",");
+        
+        var names = "";
+        var userguid = "";
+        //ctrlobj.value = aValue[0];
+
+        for (var i = 0; i < aNameValue.length; i++) {
+         names += aNameValue[i].split(" ")[0] + ",";
+         userguid += aUserGuidValue[i]+",";
+        }
+
+        document.getElementById(ctrlobj).value = names.substring(0, names.length - 1);
+        document.getElementById(valueobj).value = userguid.substring(0, userguid.length - 1);       
+        
+    }
+}
+
+function selectJiaban(info,ddl,ddl1,ddl2)
+{
+    var jiabantype=document.getElementById(ddl);
+    var jiabanvalue=jiabantype.options[jiabantype.selectedIndex].value;
+    if(info=="start")
+    {
+        jiabanvalue=19;
+    }
+    var jiabantima1=document.getElementById(ddl1);
+    var jiabantima2=document.getElementById(ddl2);
+    jiabantima1.options.length=0;
+    jiabantima2.options.length=0;
+    var time=0;var ddltime="";var timeinfo="次日";
+    if(jiabanvalue==19)
+    {
+        for(var i=0;i<=10;i++)
+        {
+            if((19+i)>=24)
+            {
+                ddltime=timeinfo+time;
+                time++;
+            }
+            else
+            {
+                ddltime=19+i;
+            }
+            jiabantima1.options.add(new Option(ddltime+":00",ddltime));
+            jiabantima2.options.add(new Option(ddltime+":00",ddltime));
+            if(i!=10)
+            {
+                jiabantima1.options.add(new Option(ddltime+":30",ddltime+0.5));
+                jiabantima2.options.add(new Option(ddltime+":30",ddltime+0.5));
+            }
+            if((19+i)==19)
+            {
+                jiabantima1.selectedIndex=(i*2);
+            }
+            if((19+i)==21)
+            {
+                jiabantima2.selectedIndex=(i*2);
+            }
+        }
+    }
+    else if(jiabanvalue==18||jiabanvalue==20)
+    {
+        for(var i=5;i<24;i++)
+        {
+            jiabantima1.options.add(new Option(i+":00",i));
+            jiabantima2.options.add(new Option(i+":00",i));
+            
+            jiabantima1.options.add(new Option(i+":30",i+0.5));
+            jiabantima2.options.add(new Option(i+":30",i+0.5));
+            if(i==9)
+            {
+                jiabantima1.selectedIndex=(i-5)*2;
+            }
+            if(i==17)
+            {
+                jiabantima2.selectedIndex=(i-5)*2;
+            }
+        }
+        
+        for(var i=0;i<=5;i++)
+        {
+            jiabantima1.options.add(new Option("次日"+i+":00",i));
+            jiabantima2.options.add(new Option("次日"+i+":00",i));
+            
+            jiabantima1.options.add(new Option("次日"+i+":30",i+0.5));
+            jiabantima2.options.add(new Option("次日"+i+":30",i+0.5));
+        }
+    }
+}
+
+function selectJiaban2(flag,ddl1,ddl2)
+{
+    var jiabantima1=document.getElementById(ddl1);
+    var jiabantima2=document.getElementById(ddl2);
+    jiabantima1.options.length=0;
+    jiabantima2.options.length=0;
+    var time=0;var ddltime="";var timeinfo="次日";
+    if(flag)
+    {
+        for(var i=0;i<=10;i++)
+        {
+            if((19+i)>=24)
+            {
+                ddltime=timeinfo+time;
+                time++;
+            }
+            else
+            {
+                ddltime=19+i;
+            }
+            jiabantima1.options.add(new Option(ddltime+":00",ddltime));
+            jiabantima2.options.add(new Option(ddltime+":00",ddltime));
+            if(i!=10)
+            {
+                jiabantima1.options.add(new Option(ddltime+":30",ddltime+0.5));
+                jiabantima2.options.add(new Option(ddltime+":30",ddltime+0.5));
+            }
+            if((19+i)==19)
+            {
+                jiabantima1.selectedIndex=i;
+            }
+            if((19+i)==21)
+            {
+                jiabantima2.selectedIndex=(i*2);
+            }
+        }
+    }
+    else
+    {
+        for(var i=5;i<24;i++)
+        {
+            jiabantima1.options.add(new Option(i+":00",i));
+            jiabantima2.options.add(new Option(i+":00",i));
+            
+            jiabantima1.options.add(new Option(i+":30",i+0.5));
+            jiabantima2.options.add(new Option(i+":30",i+0.5));
+            if(i==9)
+            {
+                jiabantima1.selectedIndex=(i-5)*2;
+            }
+            if(i==17)
+            {
+                jiabantima2.selectedIndex=(i-5)*2;
+            }
+        }
+        
+        for(var i=0;i<=5;i++)
+        {
+            jiabantima1.options.add(new Option("次日"+i+":00",i));
+            jiabantima2.options.add(new Option("次日"+i+":00",i));
+            
+            if(i==5)
+            {
+                jiabantima1.options.add(new Option("次日"+i+":30",i+0.5));
+                jiabantima2.options.add(new Option("次日"+i+":30",i+0.5));
+            }
+        }
+    }
+}
+
+function saveTime(hfinfo,ddl1,ddl2)
+{
+    var hidden=document.getElementById(hfinfo);
+    var jiabantima1=document.getElementById(ddl1);
+    var jiabantima2=document.getElementById(ddl2);
+    hidden.value=jiabantima1.options[jiabantima1.selectedIndex].text+"&"+jiabantima2.options[jiabantima2.selectedIndex].text+"%";
+    hidden.value+=jiabantima1.options[jiabantima1.selectedIndex].value+"&"+jiabantima2.options[jiabantima2.selectedIndex].value;
+}
+
+function MonthInfo()
+{
+    var ddlmonth=document.getElementById("ctl00_ContentPlaceHolder2_ddlMonth");
+    var ddl=document.getElementById("ctl00_ContentPlaceHolder2_ddlDay");
+    ddl.options.length=0;
+    ddl.options.add(new Option("=请选择=","0"));
+    var month=ddlmonth.options[ddlmonth.selectedIndex].value;
+    month=parseInt(month);
+    var count=0;
+    switch(month)
+    {
+        case 1:
+        case 3:
+        case 5:
+        case 7:
+        case 8:
+        case 10:
+        case 12:
+            count=31;
+            break;
+        case 4:
+        case 6:
+        case 9:
+        case 11:
+            count=30;
+            break;
+        case 2:
+            if (month % 4 == 0 && month % 100 != 0 || month % 4 == 0)
+                count=29;
+            else
+                count=28;
+            break;
+    }
+    var day="";
+    for(var i=0;i<count;i++)
+    {
+        day=i+1;
+        if((i+1)<10)
+        {
+            day="0"+day;
+        }
+        ddl.options.add(new Option(day,day));
+    }
+}
