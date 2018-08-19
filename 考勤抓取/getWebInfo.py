@@ -75,9 +75,11 @@ if __name__ =="__main__":
     print(len(hrefList))
     infoList = []
     for href in hrefList:
-        b.visit(href)
-        infoList.append(getInfo(b))
-        break
+        try:
+            b.visit(href)
+            infoList.append(getInfo(b))
+        except:
+            print('无法访问：' + href)
     print(infoList)    
     writeExcel(infoList)
 
