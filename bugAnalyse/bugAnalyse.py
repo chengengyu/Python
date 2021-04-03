@@ -2,6 +2,9 @@ __author__ = 'chengengyu'
 
 from openpyxl import Workbook, load_workbook
 from datetime import datetime
+import numpy   #配合Python3.4使用 numpy1.15版本
+
+
 
 dateformat = "%Y-%m-%d %H:%M:%S"
 
@@ -18,7 +21,7 @@ class BugInfoClass(object):
         lineList = bugLine.split(",")
         self.BugNum = lineList[0]
         self.title = lineList[1]
-        self.submitTime = lineList[2]
+        self.submitTime = datetime.strptime(lineList[2], dateformat)
         self.state = lineList[3]
         self.rank = lineList[4]
         self.assignTime = ""
@@ -47,21 +50,37 @@ class BugInfoClass(object):
             self.postponeTime = datetime.strptime(lineList[25].split(".")[0], dateformat)
         self.subsystem = lineList[31]
         self.fomrerState = lineList[32]
-        if lineList[32]:
-            self.closeTime = datetime.strptime(lineList[25].split(".")[0], dateformat)
+        if lineList[33]:
+            self.closeTime = datetime.strptime(lineList[33].split(".")[0], dateformat)
+        self.hlFlag = False
+        self.valid = True
 
-    def filter():
+    def filter(self, memberDic):
         ''' 
             1、判断是否属于：依次判断owner、实际解决人、首要解决人为HL人员。
             2、有效性：当前状态不属于无效的、重复的、已挂起、待信息补充，
-                或者当前状态为关闭，之前的状态为：重复的、无效的、待信息补充
+                或者当前状态为关闭，之前的状态不为：重复的、无效的、待信息补充
         '''
+        if self.owner in memberDic or self.Fixer in memberDic or self.firstFixer in memberDic:
+            self.hlFlag = True
+        if self.state == "已关闭":
+            if self.state == "重复的" or self.state == "无效的" or self.state == "待信息补充" or self.state == "已挂起":
+                self.valid = False
+        else:
+            if self.fomrerState == "重复的" or self.fomrerState == "无效的" or self.fomrerState == "待信息补充":
+                self.valid = False
+    
+    def calcDiff(self):
+        self.assignDiff = ""
+        self.modifyDiff = ""
+        self.resolveDiff = ""
+        self.closeDiff = ""
+        if self.assignTime:
+            self.assignDiff = numpy.busday_count(self.submitTime.date(), self.assignTime.date())
+            print(self.assignDiff, self.submitTime, self.assignTime)
 
 
-
-
-
-memberfp = open("e:\\python\\bugAnalyse\\member.txt", "r")
+memberfp = open("K:\\work\\GitHub\\Python\\bugAnalyse\\member.txt", "r")
 memberDic = {}
 for num, eachLine in enumerate(memberfp):
     member = memberClass(eachLine.rstrip())
@@ -69,19 +88,28 @@ for num, eachLine in enumerate(memberfp):
 memberfp.close()
 
 #bugFileName = input("bug CSV: ")
-bugfp = open("e:\\python\\bugAnalyse\\test.csv", "r")
+bugfp = open("K:\\work\\GitHub\\Python\\bugAnalyse\\test.csv", "r")
+
+bugCount = 0
+bugVliadCount = 0
 
 bugInfoList = []
 for num, eachLine in enumerate(bugfp):
     try:
         bugInfo = BugInfoClass(eachLine)
-        bugInfoList.append(bugInfo)
-        print(bugInfo.BugNum)
-        print(bugInfo.fomrerState)
-    except:
+        bugInfo.filter(memberDic)
+        bugInfo.calcDiff()
+        bugCount += 1
+        if bugInfo.hlFlag == True and bugInfo.valid == True:
+            bugInfoList.append(bugInfo)
+            bugVliadCount += 1
+        #print(bugInfo.BugNum)
+        #print(bugInfo.fomrerState)
+    except Exception as e:
+        print(str(e))
         print(eachLine)
 
-print(len(bugInfoList))
+print(bugCount, bugVliadCount, len(bugInfoList))
 bugfp.close()
 
 
