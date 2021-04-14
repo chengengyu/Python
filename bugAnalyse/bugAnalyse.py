@@ -26,38 +26,12 @@ class memberClass(object):
         self.zc1Num = 0  # 内部版本研发自查
         self.zc1TobeCloseNum = 0
         self.zc2Num = 0  # 正式版本研发自查
-        self.zc2OnwerNum = 0
+        # self.zc2OnwerNum = 0
         self.zc2TobeCloseNum = 0
         self.zc2ClosedNum = 0
         # self.zc2ModifyTimeSum = 0 部分研发自查未按流程流转，导致无modify时间
         self.zc2ResolveTimeSum = 0
         self.zc2CloseTimeSum = 0
-
-    def count(self, bugInfo):
-        if bugInfo.type == "设计变更" or bugInfo.type == "需求变更":
-            self.crNum += 1
-        if bugInfo.type == "缺陷":
-            self.bugNum += 1
-            if self.id == bugInfo.owner:
-                if bugInfo.state == "已提出" or bugInfo.state == "已分配":
-                    self.tobeOpen += 1
-                if bugInfo.state == "已打开" and bugInfo.modifyFinishTime == "":
-                    self.tobeModify += 1
-                if bugInfo.state == "已打开" and bugInfo.modifyFinishTime != "":
-                    self.tobeResolve += 1
-                if bugInfo.state == "已解决":
-                    self.tobeClose += 1
-            if buginfo.state == "已关闭":
-                if self.id == bugInfo.owner or self.id == bugInfo.Fixer:
-                    self.Close += 1
-                    self.bugModifyTimeSum += numpy.busday_count(bugInfo.submitTime.date(), bugInfo.modifyFinishTime.date())
-                    self.bugResolveTimeSum += numpy.busday_count(bugInfo.submitTime.date(), bugInfo.resolveTime.date())
-                    self.bugcloseTimeSum += numpy.busday_count(bugInfo.submitTime.date(), bugInfo.closeTime.date())
-        if bugInfo.type == "研发自查":
-            if bugInfo.detailVer.find("研发内部版本") != -1：
-                if self.id = 
-            else:
-
 
 
 class groupClass(object):
@@ -75,19 +49,35 @@ class groupClass(object):
         self.close = 0
         self.closeRatio = 0
         self.bugModifyTimeSum = 0
+        self.bugModifyTimeAverage = 0
         self.bugResolveTimeSum = 0
+        self.bugResolveTimeAverage = 0
         self.bugCloseTimeSum = 0
+        self.bugCloseTimeAverage = 0
         self.zc1Num = 0  # 内部版本研发自查
         self.zc1TobeCloseNum = 0
         self.zc1TobeCloseRatio = 0
-        self.zc2Num = 0  # 正式版本研发自查
-        self.zc2OnwerNum = 0
+        self.zc2Num = 0  # 正式版本研发自查提出数
         self.zc2TobeCloseNum = 0
-        self.zc2TobeCloseRatio = 0 
+        self.zc2TobeCloseRatio = 0
         self.zc2ClosedNum = 0
-        self.zc2ClosedRation = 0
         self.zc2ResolveTimeSum = 0
+        self.zc2ResolveTimeAverage = 0
         self.zc2CloseTimeSum = 0
+        self.zc2CloseTimeAverage = 0
+
+    def calc(self):
+        self.unModifyRatio = self.tobeModify / self.bugNum
+        self.tobeResolveRatio = self.tobeResolve / self.bugNum
+        self.tobeCloseRatio = self.tobeClose / self.bugNum
+        self.closeRatio = self.close / self.bugNum
+        self.bugModifyTimeAverage = self.bugModifyTimeSum / self.close
+        self.bugResolveTimeAverage = self.bugResolveTimeSum / self.close
+        self.bugCloseTimeAverage = self.bugCloseTimeSum / self.close
+        self.zc1TobeCloseRatio = self.zc1TobeCloseNum / self.zc1Num
+        self.zc2TobeCloseRatio = self.zc2TobeCloseNum / (self.zc2TobeCloseNum + self.zc2ClosedNum)
+        self.zc2ResolveTimeAverage = self.zc2ResolveTimeSum / self.zc2ClosedNum
+        self.zc2CloseTimeAverage = self.zc2CloseTimeSum / self.zc2ClosedNum
 
 
 class BugInfoClass(object):
@@ -111,7 +101,8 @@ class BugInfoClass(object):
         self.product = lineList[7]
         self.ver = lineList[8]
         self.owner = lineList[9]
-        self.Fixer = lineList[13]
+        self.submitter = lineList[12]
+        self.fixer = lineList[13]
         self.firstFixer = lineList[14]
         self.type = lineList[21]
         self.invalidTime = ""
@@ -131,7 +122,7 @@ class BugInfoClass(object):
         if lineList[33]:
             self.closeTime = datetime.strptime(lineList[33].split(".")[0], dateformat)
         self.detailVer = lineList[35]
-        self.hlFlag = False
+        self.hlName = ""
         self.valid = True
         self.assignDiff = ""
         self.modifyDiff = ""
@@ -140,13 +131,15 @@ class BugInfoClass(object):
 
     def filter(self, memberDic):
         '''
-            1、判断是否属于：依次判断owner、实际解决人、首要解决人为HL人员。
+            1、判断是否属于：依次判断实际解决人、owner为HL人员
             2、有效性：当前状态不属于无效的、重复的、已挂起、待信息补充，
                 或者当前状态为关闭，之前的状态不为：重复的、无效的、待信息补充
         '''
-        if self.owner in memberDic or self.Fixer in memberDic or self.firstFixer in memberDic:
-            self.hlFlag = True
-        if self.state == "已关闭":
+        if self.fixer in memberDic:
+            self.hlName = self.fixer
+        if self.owner in memberDic:
+            self.hlName = self.owner
+        if self.state != "已关闭":
             if self.state == "重复的" or self.state == "无效的" or self.state == "待信息补充" or self.state == "已挂起":
                 self.valid = False
         else:
@@ -163,12 +156,94 @@ class BugInfoClass(object):
         if self.closeTime:
             self.closeDiff = numpy.busday_count(self.submitTime.date(), self.closeTime.date())
 
+    def count(self, memberDic, groupDic, productDic):
+        product = productDic[self.product]
+        member = memberDic[self.hlName]
+        group = groupDic[member.group]
+
+        if self.submitter in memberDic:
+            memberSubmit = memberDic[self.submitter]
+            groupSubmit = groupDic[memberSubmit.group]
+
+        if self.type == "设计变更" or self.type == "需求变更":
+            member.crNum += 1
+            group.crNum += 1
+            product.crNum += 1
+        if self.type == "缺陷":
+            member.bugNum += 1
+            group.bugNum += 1
+            product.bugNum += 1
+            if self.id == self.owner:
+                if self.state == "已提出" or self.state == "已分配":
+                    member.tobeOpen += 1
+                    group.tobeOpen += 1
+                    product.tobeOpen += 1
+                if self.state == "已打开" and self.modifyFinishTime == "":
+                    member.tobeModify += 1
+                    group.tobeModify += 1
+                    product.tobeModify += 1
+                if self.state == "已打开" and self.modifyFinishTime != "":
+                    member.tobeResolve += 1
+                    group.tobeResolve += 1
+                    product.tobeResolve += 1
+                if self.state == "已解决":
+                    member.tobeClose += 1
+                    group.tobeClose += 1
+                    product.tobeClose += 1
+            if self.state == "已关闭":
+                if self.id == self.Fixer:
+                    member.Close += 1
+                    group.Close += 1
+                    product.Close += 1
+                    member.bugModifyTimeSum += self.modifyDiff
+                    member.bugResolveTimeSum += self.resolveDiff
+                    member.bugcloseTimeSum += self.closeDiff
+                    group.bugModifyTimeSum += self.modifyDiff
+                    group.bugResolveTimeSum += self.resolveDiff
+                    group.bugcloseTimeSum += self.closeDiff
+                    product.bugModifyTimeSum += self.modifyDiff
+                    product.bugResolveTimeSum += self.resolveDiff
+                    product.bugcloseTimeSum += self.closeDiff
+        if self.type == "研发自查":
+            if self.detailVer.find("研发内部版本") != -1:
+                if self.submitter in memberDic:
+                    memberSubmit.zc1Num += 1
+                    groupSubmit.zc1Num += 1
+                    product.zc1Num += 1
+                    if self.state != "已关闭":
+                        memberSubmit.zc1TobeCloseNum += 1
+                        groupSubmit.zc1TobeCloseNum += 1
+                        product.zc1TobeCloseNum += 1
+            else:
+                if self.submitter in memberDic:
+                    memberSubmit.zc2Num += 1
+                    groupSubmit.zc2Num += 1
+                    product.zc2Num += 1
+                if self != "已关闭":
+                    member.zc2TobeCloseNum += 1
+                    group.zc2TobeCloseNum += 1
+                    product.zc2TobeCloseNum += 1
+                else:
+                    if member.id == self.Fixer:
+                        member.zc2ClosedNum += 1
+                        group.zc2ClosedNum += 1
+                        product.zc2ClosedNum += 1
+                        member.zc2ResolveTimeSum += self.resolveDiff
+                        member.zc2CloseTimeSum += self.closeDiff
+                        group.zc2ResolveTimeSum += self.resolveDiff
+                        group.zc2CloseTimeSum += self.closeDiff
+                        product.zc2ResolveTimeSum += self.resolveDiff
+                        product.zc2CloseTimeSum += self.closeDiff
+
 
 memberfp = open("K:\\work\\GitHub\\Python\\bugAnalyse\\member.txt", "r")
 memberDic = {}
+gourpDic = {}
 for num, eachLine in enumerate(memberfp):
     member = memberClass(eachLine.rstrip())
     memberDic[member.id] = member
+    if member.group not in groupDic:
+        gourpDic[member.group] = groupClass(member.group)
 memberfp.close()
 
 # bugFileName = input("bug CSV: ")
@@ -179,14 +254,18 @@ bugVliadCount = 0
 
 # 遍历所有bug，统计出属于HL的有效BUG
 bugInfoList = []
+productDic = {}
 for num, eachLine in enumerate(bugfp):
     try:
         bugInfo = BugInfoClass(eachLine)
         bugInfo.filter(memberDic)
-        bugInfo.calcDiff()
         bugCount += 1
-        if bugInfo.hlFlag is True and bugInfo.valid is True:
+        if bugInfo.hlName != "" and bugInfo.valid is True:
+            if bugInfo.product not in productDic:
+                productDic[bugInfo.product] = groupClass(bugInfo.product)
             bugInfoList.append(bugInfo)
+            bugInfo.calcDiff()
+            bugInfo.count(memberDic, groupDic, productDic)  # 按照规则统计到人、资源组、项目名下：
             bugVliadCount += 1
         # print(bugInfo.BugNum)
         # print(bugInfo.fomrerState)
@@ -196,12 +275,3 @@ for num, eachLine in enumerate(bugfp):
 
 print(bugCount, bugVliadCount, len(bugInfoList))
 bugfp.close()
-
-# 按照规则统计到人、资源组、项目名下：
-for bugInfo in bugInfoList:
-    if bugInfo.owner in memberDic:
-        memberDic[bugInfo.owner].count()
-
-
-
-
