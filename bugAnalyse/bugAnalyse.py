@@ -6,6 +6,79 @@ import numpy   # 配合Python3.4使用 numpy1.15版本
 
 dateformat = "%Y-%m-%d %H:%M:%S"
 
+titleListBug = [
+    "DTMUC",
+    "简述",
+    "提出时间",
+    "状态",
+    "等级",
+    "分配时间",
+    "modifyFinish时间",
+    "产品",
+    "版本",
+    "owner",
+    "提出人",
+    "实际解决人",
+    "首要解决人",
+    "类型",
+    "置无效时间",
+    "置重复时间",
+    "解决时间",
+    "挂起时间",
+    "子系统",
+    "formerState",
+    "关闭时间",
+    "详细版本",
+    "责任人",
+    "是否HL相关",
+    "分配时长",
+    "modify时长",
+    "解决时长",
+    "关闭时长"
+]
+
+titleListPerson = [
+    "姓名",
+    "域用户名",
+    "资源组",
+    "CR个数",
+    "BUG个数",
+    "待打开",
+    "待modifyFinish",
+    "待resolve",
+    "待关闭",
+    "已关闭",
+    "平均modifyFinish时长",
+    "平均resolve时长",
+    "平均关闭时长",
+    "内部版本研发自查提出个数",
+    "内部版本研发自查待关闭个数",
+    "正式版本研发自查提出个数",
+    "正式版本研发自查待关闭个数",
+    "正式版本研发自查关闭个数",
+    "正式版本研发自查平均resolve时长",
+    "正式版本研发自查平均关闭时长"
+]
+
+titleListGroup = [
+    "组名/项目名",
+    "CR个数",
+    "BUG个数",
+    "待modifyFinish比例",
+    "待resolve比例",
+    "待关闭比例",
+    "已关闭比例",
+    "平均modifyFinish时长",
+    "平均resolve时长",
+    "平均关闭时长",
+    "内部版本研发自查提出个数",
+    "内部版本研发自查待关闭比例",
+    "正式版本研发自查提出个数",
+    "正式版本研发自查待关闭比例",
+    "正式版本研发自查平均resolve时长",
+    "正式版本研发自查平均关闭时长"
+]
+
 
 class memberClass(object):
     def __init__(self, line):
@@ -21,18 +94,29 @@ class memberClass(object):
         self.tobeClose = 0
         self.close = 0
         self.bugModifyTimeSum = 0
+        self.bugModifyTimeAverage = 0
         self.bugResolveTimeSum = 0
+        self.bugResolveTimeAverage = 0
         self.bugCloseTimeSum = 0
-        self.zc1Num = 0  # 内部版本研发自查
+        self.bugCloseTimeAverage = 0
+        self.zc1Num = 0  # 内部版本研发自查提出个数
         self.zc1TobeCloseNum = 0
-        self.zc2Num = 0  # 正式版本研发自查
+        self.zc2Num = 0  # 正式版本研发自查提出个数
         # self.zc2OnwerNum = 0
         self.zc2TobeCloseNum = 0
         self.zc2ClosedNum = 0
         # self.zc2ModifyTimeSum = 0 部分研发自查未按流程流转，导致无modify时间
         self.zc2ResolveTimeSum = 0
+        self.zc2ResolveTimeAverage = 0
         self.zc2CloseTimeSum = 0
+        self.zc2CloseTimeAverage = 0
 
+    def calc(self):
+        self.bugModifyTimeAverage = self.bugModifyTimeSum / self.close
+        self.bugResolveTimeAverage = self.bugResolveTimeSum / self.close
+        self.bugCloseTimeAverage = self.bugCloseTimeSum / self.close
+        self.zc2ResolveTimeAverage = self.zc2ResolveTimeSum / self.zc2ClosedNum
+        self.zc2CloseTimeAverage = self.zc2CloseTimeSum / self.zc2ClosedNum
 
 class groupClass(object):
     def __init__(self, groupName):
@@ -54,10 +138,10 @@ class groupClass(object):
         self.bugResolveTimeAverage = 0
         self.bugCloseTimeSum = 0
         self.bugCloseTimeAverage = 0
-        self.zc1Num = 0  # 内部版本研发自查
+        self.zc1Num = 0  # 内部版本研发自查提出个数
         self.zc1TobeCloseNum = 0
         self.zc1TobeCloseRatio = 0
-        self.zc2Num = 0  # 正式版本研发自查提出数
+        self.zc2Num = 0  # 正式版本研发自查提出个数
         self.zc2TobeCloseNum = 0
         self.zc2TobeCloseRatio = 0
         self.zc2ClosedNum = 0
@@ -67,7 +151,7 @@ class groupClass(object):
         self.zc2CloseTimeAverage = 0
 
     def calc(self):
-        self.unModifyRatio = self.tobeModify / self.bugNum
+        self.unModifyRatio = (self.tobeopen + self.tobeModify) / self.bugNum
         self.tobeResolveRatio = self.tobeResolve / self.bugNum
         self.tobeCloseRatio = self.tobeClose / self.bugNum
         self.closeRatio = self.close / self.bugNum
@@ -247,7 +331,7 @@ for num, eachLine in enumerate(memberfp):
 memberfp.close()
 
 # bugFileName = input("bug CSV: ")
-bugfp = open("K:\\work\\GitHub\\Python\\bugAnalyse\\test.csv", "r")
+bugFp = open("K:\\work\\GitHub\\Python\\bugAnalyse\\test.csv", "r")
 
 bugCount = 0
 bugVliadCount = 0
@@ -255,7 +339,7 @@ bugVliadCount = 0
 # 遍历所有bug，统计出属于HL的有效BUG
 bugInfoList = []
 productDic = {}
-for num, eachLine in enumerate(bugfp):
+for num, eachLine in enumerate(bugFp):
     try:
         bugInfo = BugInfoClass(eachLine)
         bugInfo.filter(memberDic)
@@ -265,7 +349,7 @@ for num, eachLine in enumerate(bugfp):
                 productDic[bugInfo.product] = groupClass(bugInfo.product)
             bugInfoList.append(bugInfo)
             bugInfo.calcDiff()
-            bugInfo.count(memberDic, groupDic, productDic)  # 按照规则统计到人、资源组、项目名下：
+            bugInfo.count(memberDic, groupDic, productDic)  # 按照规则统计到人、资源组、项目名下
             bugVliadCount += 1
         # print(bugInfo.BugNum)
         # print(bugInfo.fomrerState)
@@ -274,4 +358,16 @@ for num, eachLine in enumerate(bugfp):
         print(eachLine)
 
 print(bugCount, bugVliadCount, len(bugInfoList))
-bugfp.close()
+bugFp.close()
+
+
+hlBugFp = open("bugInfo.csv")
+for item in titleListBug:
+    hlBugFp.write(item + ",")
+hlBugFp.write("\n")
+
+for bugInfo in bugInfoList:
+    hlBugFp.write(bugInfo.BugNum + ",")
+    hlBugFp.write(bugInfo.title + ",")
+    hlBugFp.write(bugInfo.)
+
