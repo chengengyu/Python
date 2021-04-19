@@ -151,7 +151,7 @@ class groupClass(object):
         self.zc2CloseTimeAverage = 0
 
     def calc(self):
-        self.unModifyRatio = (self.tobeopen + self.tobeModify) / self.bugNum
+        self.unModifyRatio = (self.tobeOpen + self.tobeModify) / self.bugNum
         self.tobeResolveRatio = self.tobeResolve / self.bugNum
         self.tobeCloseRatio = self.tobeClose / self.bugNum
         self.closeRatio = self.close / self.bugNum
@@ -369,5 +369,5 @@ hlBugFp.write("\n")
 for bugInfo in bugInfoList:
     hlBugFp.write(bugInfo.BugNum + ",")
     hlBugFp.write(bugInfo.title + ",")
-    hlBugFp.write(bugInfo.)
+    # hlBugFp.write(bugInfo.)
 
