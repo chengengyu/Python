@@ -112,11 +112,11 @@ class memberClass(object):
         self.zc2CloseTimeAverage = 0
 
     def calc(self):
-        self.bugModifyTimeAverage = self.bugModifyTimeSum / self.close
-        self.bugResolveTimeAverage = self.bugResolveTimeSum / self.close
-        self.bugCloseTimeAverage = self.bugCloseTimeSum / self.close
-        self.zc2ResolveTimeAverage = self.zc2ResolveTimeSum / self.zc2ClosedNum
-        self.zc2CloseTimeAverage = self.zc2CloseTimeSum / self.zc2ClosedNum
+        self.bugModifyTimeAverage = division(self.bugModifyTimeSum, self.close)
+        self.bugResolveTimeAverage = division(self.bugResolveTimeSum, self.close)
+        self.bugCloseTimeAverage = division(self.bugCloseTimeSum, self.close)
+        self.zc2ResolveTimeAverage = division(self.zc2ResolveTimeSum, self.zc2ClosedNum)
+        self.zc2CloseTimeAverage = division(self.zc2CloseTimeSum, self.zc2ClosedNum)
 
 class groupClass(object):
     def __init__(self, groupName):
@@ -151,17 +151,17 @@ class groupClass(object):
         self.zc2CloseTimeAverage = 0
 
     def calc(self):
-        self.unModifyRatio = (self.tobeOpen + self.tobeModify) * 100 / self.bugNum
-        self.tobeResolveRatio = self.tobeResolve * 100 / self.bugNum
-        self.tobeCloseRatio = self.tobeClose * 100 / self.bugNum
-        self.closeRatio = self.close * 100 / self.bugNum
-        self.bugModifyTimeAverage = self.bugModifyTimeSum / self.close
-        self.bugResolveTimeAverage = self.bugResolveTimeSum / self.close
-        self.bugCloseTimeAverage = self.bugCloseTimeSum / self.close
-        self.zc1TobeCloseRatio = self.zc1TobeCloseNum * 100 / self.zc1Num
-        self.zc2TobeCloseRatio = self.zc2TobeCloseNum * 100 / (self.zc2TobeCloseNum + self.zc2ClosedNum)
-        self.zc2ResolveTimeAverage = self.zc2ResolveTimeSum / self.zc2ClosedNum
-        self.zc2CloseTimeAverage = self.zc2CloseTimeSum / self.zc2ClosedNum
+        self.unModifyRatio = division((self.tobeOpen + self.tobeModify) * 100, self.bugNum)
+        self.tobeResolveRatio = division(self.tobeResolve * 100, self.bugNum)
+        self.tobeCloseRatio = division(self.tobeClose * 100, self.bugNum)
+        self.closeRatio = division(self.close * 100, self.bugNum)
+        self.bugModifyTimeAverage = division(self.bugModifyTimeSum, self.close)
+        self.bugResolveTimeAverage = division(self.bugResolveTimeSum, self.close)
+        self.bugCloseTimeAverage = division(self.bugCloseTimeSum, self.close)
+        self.zc1TobeCloseRatio = division(self.zc1TobeCloseNum * 100, self.zc1Num)
+        self.zc2TobeCloseRatio = division(self.zc2TobeCloseNum * 100, self.zc2TobeCloseNum + self.zc2ClosedNum)
+        self.zc2ResolveTimeAverage = division(self.zc2ResolveTimeSum, self.zc2ClosedNum)
+        self.zc2CloseTimeAverage = division(self.zc2CloseTimeSum, self.zc2ClosedNum)
 
 
 class BugInfoClass(object):
@@ -259,7 +259,7 @@ class BugInfoClass(object):
             group.bugNum += 1
             product.bugNum += 1
             if member.id == self.owner:
-                if self.state == "已提出" or self.state == "已分配":
+                if self.state == "已提出" or self.state == "已分派":
                     member.tobeOpen += 1
                     group.tobeOpen += 1
                     product.tobeOpen += 1
@@ -319,6 +319,10 @@ class BugInfoClass(object):
                         group.zc2CloseTimeSum += self.closeDiff
                         product.zc2ResolveTimeSum += self.resolveDiff
                         product.zc2CloseTimeSum += self.closeDiff
+
+def division(a, b):
+    return (a / b) if b != 0 else 0
+
 
 def getTimeStr(dateTimeObject):
     if dateTimeObject:
@@ -415,7 +419,7 @@ def writeGroup(groupDic, groupFp):
         groupFp.write("\n")
 
 
-memberfp = open("D:\\GitHub\\Python\\bugAnalyse\\member.txt", "r")
+memberfp = open("member.txt", "r")
 memberDic = {}
 groupDic = {}
 for num, eachLine in enumerate(memberfp):
