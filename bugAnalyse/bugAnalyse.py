@@ -1,4 +1,4 @@
-__author__ = 'chengengyu'
+# __author__ = 'chengengyu'
 
 # from openpyxl import Workbook, load_workbook
 from datetime import datetime
@@ -6,7 +6,7 @@ import numpy   # 配合Python3.4使用 numpy1.15版本
 
 dateformat = "%Y-%m-%d %H:%M:%S"
 
-titleListBug = [
+TITLE_LIST_BUG = [
     "DTMUC",
     "简述",
     "提出时间",
@@ -37,7 +37,7 @@ titleListBug = [
     "关闭时长"
 ]
 
-titleListPerson = [
+TITLE_LIST_PERSON = [
     "姓名",
     "域用户名",
     "资源组",
@@ -60,7 +60,7 @@ titleListPerson = [
     "正式版本研发自查平均关闭时长"
 ]
 
-titleListGroup = [
+TITLE_LIST_GROUP = [
     "组名/项目名",
     "CR个数",
     "BUG个数",
@@ -151,15 +151,15 @@ class groupClass(object):
         self.zc2CloseTimeAverage = 0
 
     def calc(self):
-        self.unModifyRatio = (self.tobeopen + self.tobeModify) / self.bugNum
-        self.tobeResolveRatio = self.tobeResolve / self.bugNum
-        self.tobeCloseRatio = self.tobeClose / self.bugNum
-        self.closeRatio = self.close / self.bugNum
+        self.unModifyRatio = (self.tobeOpen + self.tobeModify) * 100 / self.bugNum
+        self.tobeResolveRatio = self.tobeResolve * 100 / self.bugNum
+        self.tobeCloseRatio = self.tobeClose * 100 / self.bugNum
+        self.closeRatio = self.close * 100 / self.bugNum
         self.bugModifyTimeAverage = self.bugModifyTimeSum / self.close
         self.bugResolveTimeAverage = self.bugResolveTimeSum / self.close
         self.bugCloseTimeAverage = self.bugCloseTimeSum / self.close
-        self.zc1TobeCloseRatio = self.zc1TobeCloseNum / self.zc1Num
-        self.zc2TobeCloseRatio = self.zc2TobeCloseNum / (self.zc2TobeCloseNum + self.zc2ClosedNum)
+        self.zc1TobeCloseRatio = self.zc1TobeCloseNum * 100 / self.zc1Num
+        self.zc2TobeCloseRatio = self.zc2TobeCloseNum * 100 / (self.zc2TobeCloseNum + self.zc2ClosedNum)
         self.zc2ResolveTimeAverage = self.zc2ResolveTimeSum / self.zc2ClosedNum
         self.zc2CloseTimeAverage = self.zc2CloseTimeSum / self.zc2ClosedNum
 
@@ -202,10 +202,11 @@ class BugInfoClass(object):
         if lineList[25]:
             self.postponeTime = datetime.strptime(lineList[25].split(".")[0], dateformat)
         self.subsystem = lineList[31]
-        self.fomrerState = lineList[32]
+        self.formerState = lineList[32]
+        self.closeTime = ""
         if lineList[33]:
             self.closeTime = datetime.strptime(lineList[33].split(".")[0], dateformat)
-        self.detailVer = lineList[35]
+        self.detailVer = lineList[35].replace("\n", "").replace("\r", "")
         self.hlName = ""
         self.valid = True
         self.assignDiff = ""
@@ -227,18 +228,18 @@ class BugInfoClass(object):
             if self.state == "重复的" or self.state == "无效的" or self.state == "待信息补充" or self.state == "已挂起":
                 self.valid = False
         else:
-            if self.fomrerState == "重复的" or self.fomrerState == "无效的" or self.fomrerState == "待信息补充":
+            if self.formerState == "重复的" or self.formerState == "无效的" or self.formerState == "待信息补充":
                 self.valid = False
 
     def calcDiff(self):
         if self.assignTime:
-            self.assignDiff = numpy.busday_count(self.submitTime.date(), self.assignTime.date())
+            self.assignDiff = numpy.busday_count(self.submitTime.date(), self.assignTime.date()) + 1
         if self.modifyFinishTime:
-            self.modifyDiff = numpy.busday_count(self.submitTime.date(), self.modifyFinishTime.date())
+            self.modifyDiff = numpy.busday_count(self.submitTime.date(), self.modifyFinishTime.date()) + 1
         if self.resolveTime:
-            self.resolveDiff = numpy.busday_count(self.submitTime.date(), self.resolveTime.date())
+            self.resolveDiff = numpy.busday_count(self.submitTime.date(), self.resolveTime.date()) + 1
         if self.closeTime:
-            self.closeDiff = numpy.busday_count(self.submitTime.date(), self.closeTime.date())
+            self.closeDiff = numpy.busday_count(self.submitTime.date(), self.closeTime.date()) + 1
 
     def count(self, memberDic, groupDic, productDic):
         product = productDic[self.product]
@@ -253,11 +254,11 @@ class BugInfoClass(object):
             member.crNum += 1
             group.crNum += 1
             product.crNum += 1
-        if self.type == "缺陷":
+        if self.type.find("缺陷") != -1:
             member.bugNum += 1
             group.bugNum += 1
             product.bugNum += 1
-            if self.id == self.owner:
+            if member.id == self.owner:
                 if self.state == "已提出" or self.state == "已分配":
                     member.tobeOpen += 1
                     group.tobeOpen += 1
@@ -275,21 +276,21 @@ class BugInfoClass(object):
                     group.tobeClose += 1
                     product.tobeClose += 1
             if self.state == "已关闭":
-                if self.id == self.Fixer:
-                    member.Close += 1
-                    group.Close += 1
-                    product.Close += 1
+                if member.id == self.fixer:
+                    member.close += 1
+                    group.close += 1
+                    product.close += 1
                     member.bugModifyTimeSum += self.modifyDiff
                     member.bugResolveTimeSum += self.resolveDiff
-                    member.bugcloseTimeSum += self.closeDiff
+                    member.bugCloseTimeSum += self.closeDiff
                     group.bugModifyTimeSum += self.modifyDiff
                     group.bugResolveTimeSum += self.resolveDiff
-                    group.bugcloseTimeSum += self.closeDiff
+                    group.bugCloseTimeSum += self.closeDiff
                     product.bugModifyTimeSum += self.modifyDiff
                     product.bugResolveTimeSum += self.resolveDiff
-                    product.bugcloseTimeSum += self.closeDiff
+                    product.bugCloseTimeSum += self.closeDiff
         if self.type == "研发自查":
-            if self.detailVer.find("研发内部版本") != -1:
+            if self.detailVer.find("内部版本") != -1:
                 if self.submitter in memberDic:
                     memberSubmit.zc1Num += 1
                     groupSubmit.zc1Num += 1
@@ -298,17 +299,17 @@ class BugInfoClass(object):
                         memberSubmit.zc1TobeCloseNum += 1
                         groupSubmit.zc1TobeCloseNum += 1
                         product.zc1TobeCloseNum += 1
-            else:
+            else: # 正式版本研发自查
                 if self.submitter in memberDic:
                     memberSubmit.zc2Num += 1
                     groupSubmit.zc2Num += 1
                     product.zc2Num += 1
-                if self != "已关闭":
+                if self.state != "已关闭":
                     member.zc2TobeCloseNum += 1
                     group.zc2TobeCloseNum += 1
                     product.zc2TobeCloseNum += 1
                 else:
-                    if member.id == self.Fixer:
+                    if member.id == self.fixer:
                         member.zc2ClosedNum += 1
                         group.zc2ClosedNum += 1
                         product.zc2ClosedNum += 1
@@ -319,19 +320,114 @@ class BugInfoClass(object):
                         product.zc2ResolveTimeSum += self.resolveDiff
                         product.zc2CloseTimeSum += self.closeDiff
 
+def getTimeStr(dateTimeObject):
+    if dateTimeObject:
+        return dateTimeObject.strftime("%Y-%m-%d")
+    else:
+        return ""
 
-memberfp = open("K:\\work\\GitHub\\Python\\bugAnalyse\\member.txt", "r")
+def writeBugInfo(bugInfoList, hlBugFp):
+    for item in TITLE_LIST_BUG:
+        hlBugFp.write(item + ",")
+    hlBugFp.write("\n")
+    for bugInfo in bugInfoList:
+        hlBugFp.write(str(bugInfo.BugNum) + " ,")
+        hlBugFp.write(str(bugInfo.title) + " ,")
+        hlBugFp.write(getTimeStr(bugInfo.submitTime) + " ,")
+        hlBugFp.write(bugInfo.state + " ,")
+        hlBugFp.write(bugInfo.rank + " ,")
+        hlBugFp.write(getTimeStr(bugInfo.assignTime) + " ,")
+        hlBugFp.write(getTimeStr(bugInfo.modifyFinishTime) + " ,")
+        hlBugFp.write(bugInfo.product + " ,")
+        hlBugFp.write(bugInfo.ver + " ,")
+        hlBugFp.write(bugInfo.owner + " ,")
+        hlBugFp.write(bugInfo.submitter + " ,")
+        hlBugFp.write(bugInfo.fixer + " ,")
+        hlBugFp.write(bugInfo.firstFixer + " ,")
+        hlBugFp.write(bugInfo.type + " ,")
+        hlBugFp.write(getTimeStr(bugInfo.invalidTime) + " ,")
+        hlBugFp.write(getTimeStr(bugInfo.duplicateTime) + " ,")
+        hlBugFp.write(getTimeStr(bugInfo.resolveTime) + " ,")
+        hlBugFp.write(getTimeStr(bugInfo.postponeTime) + " ,")
+        hlBugFp.write(bugInfo.subsystem + " ,")
+        hlBugFp.write(bugInfo.formerState + " ,")
+        hlBugFp.write(getTimeStr(bugInfo.closeTime) + " ,")
+        hlBugFp.write(bugInfo.detailVer + ",")
+        hlBugFp.write(bugInfo.hlName + " ,")
+        hlBugFp.write(str(bugInfo.valid) + " ,")
+        hlBugFp.write(str(bugInfo.assignDiff) + " ,")
+        hlBugFp.write(str(bugInfo.modifyDiff) + " ,")
+        hlBugFp.write(str(bugInfo.resolveDiff) + " ,")
+        hlBugFp.write(str(bugInfo.closeDiff) + " ,")
+        hlBugFp.write("\n")
+
+def writeMember(memberDic, memberFp):
+    for item in TITLE_LIST_PERSON:
+        memberFp.write(item + ",")
+    memberFp.write("\n")
+    for key in memberDic.keys():
+        memberDic[key].calc()
+        memberFp.write(memberDic[key].name + ",")
+        memberFp.write(memberDic[key].id + ",")
+        memberFp.write(memberDic[key].group + ",")
+        memberFp.write(str(memberDic[key].crNum) + ",")
+        memberFp.write(str(memberDic[key].bugNum) + ",")
+        memberFp.write(str(memberDic[key].tobeOpen) + ",")
+        memberFp.write(str(memberDic[key].tobeModify) + ",")
+        memberFp.write(str(memberDic[key].tobeResolve) + ",")
+        memberFp.write(str(memberDic[key].tobeClose) + ",")
+        memberFp.write(str(memberDic[key].close) + ",")
+        memberFp.write(str(memberDic[key].bugModifyTimeAverage) + ",")
+        memberFp.write(str(memberDic[key].bugResolveTimeAverage) + ",")
+        memberFp.write(str(memberDic[key].bugCloseTimeAverage) + ",")
+        memberFp.write(str(memberDic[key].zc1Num) + ",")
+        memberFp.write(str(memberDic[key].zc1TobeCloseNum) + ",")
+        memberFp.write(str(memberDic[key].zc2Num) + ",")
+        memberFp.write(str(memberDic[key].zc2TobeCloseNum) + ",")
+        memberFp.write(str(memberDic[key].zc2ClosedNum) + ",")
+        memberFp.write(str(memberDic[key].zc2ResolveTimeAverage) + ",")
+        memberFp.write(str(memberDic[key].zc2CloseTimeAverage) + ",")
+        memberFp.write("\n")
+
+
+def writeGroup(groupDic, groupFp):
+    for item in TITLE_LIST_GROUP:
+        groupFp.write(item + ",")
+    groupFp.write("\n")
+    for key in groupDic.keys():
+        groupDic[key].calc()
+        groupFp.write(groupDic[key].group + ",")
+        groupFp.write(str(groupDic[key].crNum) + ",")
+        groupFp.write(str(groupDic[key].bugNum) + ",")
+        groupFp.write(str(groupDic[key].unModifyRatio) + ",")
+        groupFp.write(str(groupDic[key].tobeResolveRatio) + ",")
+        groupFp.write(str(groupDic[key].tobeCloseRatio) + ",")
+        groupFp.write(str(groupDic[key].closeRatio) + ",")
+        groupFp.write(str(groupDic[key].bugModifyTimeAverage) + ",")
+        groupFp.write(str(groupDic[key].bugResolveTimeAverage) + ",")
+        groupFp.write(str(groupDic[key].bugCloseTimeAverage) + ",")
+        groupFp.write(str(groupDic[key].zc1Num) + ",")
+        groupFp.write(str(groupDic[key].zc1TobeCloseRatio) + ",")
+        groupFp.write(str(groupDic[key].zc2Num) + ",")
+        groupFp.write(str(groupDic[key].zc2TobeCloseRatio) + ",")
+        groupFp.write(str(groupDic[key].zc2ResolveTimeAverage) + ",")
+        groupFp.write(str(groupDic[key].zc2CloseTimeAverage) + ",")
+        groupFp.write("\n")
+
+
+memberfp = open("D:\\GitHub\\Python\\bugAnalyse\\member.txt", "r")
 memberDic = {}
-gourpDic = {}
+groupDic = {}
 for num, eachLine in enumerate(memberfp):
     member = memberClass(eachLine.rstrip())
     memberDic[member.id] = member
     if member.group not in groupDic:
-        gourpDic[member.group] = groupClass(member.group)
+        groupDic[member.group] = groupClass(member.group)
 memberfp.close()
 
-# bugFileName = input("bug CSV: ")
-bugFp = open("K:\\work\\GitHub\\Python\\bugAnalyse\\test.csv", "r")
+
+#bugFp = open("K:\\work\\GitHub\\Python\\bugAnalyse\\test.csv", "r")
+
 
 bugCount = 0
 bugVliadCount = 0
@@ -339,9 +435,18 @@ bugVliadCount = 0
 # 遍历所有bug，统计出属于HL的有效BUG
 bugInfoList = []
 productDic = {}
+logErr = open('logErr.txt', 'w')
+
+bugFileName = input("bug CSV: ")
+bugFp = open(bugFileName, "rb")
+allCount = 0
+bugCount = 0
+bugVliadCount =0
 for num, eachLine in enumerate(bugFp):
     try:
-        bugInfo = BugInfoClass(eachLine)
+        #尝试用GBK解码
+        eachLine = eachLine.decode('gbk')
+        bugInfo = BugInfoClass(eachLine.replace("\"", ""))
         bugInfo.filter(memberDic)
         bugCount += 1
         if bugInfo.hlName != "" and bugInfo.valid is True:
@@ -351,23 +456,35 @@ for num, eachLine in enumerate(bugFp):
             bugInfo.calcDiff()
             bugInfo.count(memberDic, groupDic, productDic)  # 按照规则统计到人、资源组、项目名下
             bugVliadCount += 1
+        allCount += 1
         # print(bugInfo.BugNum)
         # print(bugInfo.fomrerState)
     except Exception as e:
-        print(str(e))
-        print(eachLine)
+        logErr.write(str(e))
+        logErr.write("行号" + str(num) + "\n")
+logErr.close()
 
-print(bugCount, bugVliadCount, len(bugInfoList))
+print(allCount, bugCount, bugVliadCount, len(bugInfoList))
 bugFp.close()
 
 
-hlBugFp = open("bugInfo.csv")
-for item in titleListBug:
-    hlBugFp.write(item + ",")
-hlBugFp.write("\n")
+hlBugFp = open("bugInfo.csv", "w")
+writeBugInfo(bugInfoList, hlBugFp)
+hlBugFp.close()
 
-for bugInfo in bugInfoList:
-    hlBugFp.write(bugInfo.BugNum + ",")
-    hlBugFp.write(bugInfo.title + ",")
-    hlBugFp.write(bugInfo.)
+memberFp = open("人员统计.csv", "w")
+writeMember(memberDic, memberFp)
+memberFp.close()
+
+groupFp = open("资源组统计.csv", "w")
+writeGroup(groupDic, groupFp)
+groupFp.close()
+
+productFp = open("项目统计.csv", "w")
+writeGroup(productDic, productFp)
+productFp.close()
+
+print('处理成功\n')
+
+
 
