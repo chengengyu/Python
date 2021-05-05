@@ -2,9 +2,10 @@
 
 # from openpyxl import Workbook, load_workbook
 from datetime import datetime
-import numpy   # 配合Python3.4使用 numpy1.15版本
+import numpy   #计算工作日间隔使用
 
-dateformat = "%Y-%m-%d %H:%M:%S"
+# dateformat = "%Y/%m/%d %H:%M:%S"
+dateformat = "%Y/%m/%d"
 
 TITLE_LIST_BUG = [
     "DTMUC",
@@ -110,6 +111,8 @@ class memberClass(object):
         self.zc2ResolveTimeAverage = 0
         self.zc2CloseTimeSum = 0
         self.zc2CloseTimeAverage = 0
+        self.zc1Todo = 0 # 提出超过10工作日，未关闭
+        self.zc2Todo = 0 # 提出超过20工作日，未关闭
 
     def calc(self):
         self.bugModifyTimeAverage = division(self.bugModifyTimeSum, self.close)
@@ -213,6 +216,7 @@ class BugInfoClass(object):
         self.modifyDiff = ""
         self.resolveDiff = ""
         self.closeDiff = ""
+        self.bugAlarmFlag = False
 
     def filter(self, memberDic):
         '''
@@ -230,6 +234,8 @@ class BugInfoClass(object):
         else:
             if self.formerState == "重复的" or self.formerState == "无效的" or self.formerState == "待信息补充":
                 self.valid = False
+        if self.modifyFinishTime == "" and self.type == "缺陷":
+            self.bugAlarmFlag = True
 
     def calcDiff(self):
         if self.assignTime:
@@ -330,11 +336,13 @@ def getTimeStr(dateTimeObject):
     else:
         return ""
 
-def writeBugInfo(bugInfoList, hlBugFp):
+def writeBugInfo(bugInfoList, hlBugFp, alarmFlag=False):
     for item in TITLE_LIST_BUG:
         hlBugFp.write(item + ",")
     hlBugFp.write("\n")
     for bugInfo in bugInfoList:
+        if alarmFlag == True and bugInfo.bugAlarmFlag == False:
+            continue
         hlBugFp.write(str(bugInfo.BugNum) + " ,")
         hlBugFp.write(str(bugInfo.title) + " ,")
         hlBugFp.write(getTimeStr(bugInfo.submitTime) + " ,")
@@ -475,6 +483,10 @@ bugFp.close()
 hlBugFp = open("bugInfo.csv", "w")
 writeBugInfo(bugInfoList, hlBugFp)
 hlBugFp.close()
+
+bugAlarmFp = open("BUG推动.csv", "w")
+writeBugInfo(bugInfoList, bugAlarmFp, True)
+bugAlarmFp.close()
 
 memberFp = open("人员统计.csv", "w")
 writeMember(memberDic, memberFp)

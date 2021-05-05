@@ -97,6 +97,7 @@ Temporary Items
 *.toc
 *.pkg
 *.pyz
+*.csv
 考勤抓取/.vscode/settings.json
 bugAnalyse/筛选条件和方式.docx
 bugAnalyse/5G_Workreports_Help (1).docx
@@ -111,3 +112,4 @@ bugAnalyse/0822/~$20年BUG统计-0820-剔除研发自查 - 调整.xlsm
 bugAnalyse/BUG_2021.04.09 - 原始.csv
 bugAnalyse/BUG_2021.04.09.csv
 bugAnalyse/BUG_2021.04.20-OLD.csv
+bugAnalyse/人员统计.csv
