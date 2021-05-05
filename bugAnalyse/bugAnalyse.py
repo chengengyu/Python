@@ -7,6 +7,10 @@ import numpy   #计算工作日间隔使用
 # dateformat = "%Y/%m/%d %H:%M:%S"
 dateformat = "%Y/%m/%d"
 
+# 研发自查提醒门限
+ZC1_DIFF = 10
+ZC2_DIFF = 20
+
 TITLE_LIST_BUG = [
     "DTMUC",
     "简述",
@@ -38,7 +42,7 @@ TITLE_LIST_BUG = [
     "关闭时长"
 ]
 
-TITLE_LIST_PERSON = [
+TITLE_LIST_MEMBER = [
     "姓名",
     "域用户名",
     "资源组",
@@ -59,6 +63,12 @@ TITLE_LIST_PERSON = [
     "正式版本研发自查关闭个数",
     "正式版本研发自查平均resolve时长",
     "正式版本研发自查平均关闭时长"
+]
+
+TITLE_LIST_MEMBER_ZC = [
+    "姓名",
+    "内部版本研发自查待推动数（提出超过10天）",
+    "正式版本研发自查待推动数（提出超过22天）"
 ]
 
 TITLE_LIST_GROUP = [
@@ -87,6 +97,7 @@ class memberClass(object):
         self.name = lineList[0]  # 中文名
         self.id = lineList[1]    # 域用户名
         self.group = lineList[2]  # 资源组
+        self.valid = int(lineList[3]) # 是否显示
         self.crNum = 0
         self.bugNum = 0
         self.tobeOpen = 0
@@ -111,8 +122,8 @@ class memberClass(object):
         self.zc2ResolveTimeAverage = 0
         self.zc2CloseTimeSum = 0
         self.zc2CloseTimeAverage = 0
-        self.zc1Todo = 0 # 提出超过10工作日，未关闭
-        self.zc2Todo = 0 # 提出超过20工作日，未关闭
+        self.zc1TodoNum = 0 # 提出超过10工作日，未关闭
+        self.zc2TodoNum = 0 # 提出超过20工作日，未关闭
 
     def calc(self):
         self.bugModifyTimeAverage = division(self.bugModifyTimeSum, self.close)
@@ -217,6 +228,7 @@ class BugInfoClass(object):
         self.resolveDiff = ""
         self.closeDiff = ""
         self.bugAlarmFlag = False
+        self.zcTodoFlag = False # 内部版本或者正式版本研发自查待关闭
 
     def filter(self, memberDic):
         '''
@@ -305,6 +317,9 @@ class BugInfoClass(object):
                         memberSubmit.zc1TobeCloseNum += 1
                         groupSubmit.zc1TobeCloseNum += 1
                         product.zc1TobeCloseNum += 1
+                        if isAlarmZc(self.submitTime, ZC1_DIFF) == True:
+                            self.zcTodoFlag = True
+                            member.zc1TodoNum += 1 
             else: # 正式版本研发自查
                 if self.submitter in memberDic:
                     memberSubmit.zc2Num += 1
@@ -314,6 +329,9 @@ class BugInfoClass(object):
                     member.zc2TobeCloseNum += 1
                     group.zc2TobeCloseNum += 1
                     product.zc2TobeCloseNum += 1
+                    if isAlarmZc(self.submitTime, ZC2_DIFF) == True:
+                        self.zcTodoFlag = True
+                        member.zc2TodoNum += 1
                 else:
                     if member.id == self.fixer:
                         member.zc2ClosedNum += 1
@@ -327,8 +345,26 @@ class BugInfoClass(object):
                         product.zc2CloseTimeSum += self.closeDiff
 
 def division(a, b):
-    return (a / b) if b != 0 else 0
+    return round((a / b), 1) if b != 0 else 0
 
+def isAlarmZc(submitTime, threshould):
+    diff = numpy.busday_count(submitTime.date(), datetime.now().date()) + 1
+    if diff >= threshould:
+        return True
+    else:
+        return False
+
+WRITE_TYPE_ALL = 0
+WRITE_TYPE_BUG = 1
+WRITE_TYPE_ZC = 2
+
+def isWrite(bugInfo, type):
+    if type == WRITE_TYPE_BUG:
+        return bugInfo.bugAlarmFlag
+    elif type == WRITE_TYPE_ZC:
+        return bugInfo.zcTodoFlag
+    else:
+        return True
 
 def getTimeStr(dateTimeObject):
     if dateTimeObject:
@@ -336,12 +372,12 @@ def getTimeStr(dateTimeObject):
     else:
         return ""
 
-def writeBugInfo(bugInfoList, hlBugFp, alarmFlag=False):
+def writeBugInfo(bugInfoList, hlBugFp, alarmFlag=WRITE_TYPE_ALL):
     for item in TITLE_LIST_BUG:
         hlBugFp.write(item + ",")
     hlBugFp.write("\n")
     for bugInfo in bugInfoList:
-        if alarmFlag == True and bugInfo.bugAlarmFlag == False:
+        if isWrite(bugInfo, alarmFlag) == False:
             continue
         hlBugFp.write(str(bugInfo.BugNum) + " ,")
         hlBugFp.write(str(bugInfo.title) + " ,")
@@ -374,11 +410,13 @@ def writeBugInfo(bugInfoList, hlBugFp, alarmFlag=False):
         hlBugFp.write("\n")
 
 def writeMember(memberDic, memberFp):
-    for item in TITLE_LIST_PERSON:
+    for item in TITLE_LIST_MEMBER:
         memberFp.write(item + ",")
     memberFp.write("\n")
     for key in memberDic.keys():
         memberDic[key].calc()
+        if memberDic[key].valid == 0:
+            continue
         memberFp.write(memberDic[key].name + ",")
         memberFp.write(memberDic[key].id + ",")
         memberFp.write(memberDic[key].group + ",")
@@ -401,6 +439,18 @@ def writeMember(memberDic, memberFp):
         memberFp.write(str(memberDic[key].zc2CloseTimeAverage) + ",")
         memberFp.write("\n")
 
+def writeMemberZcNum(memberDic, memberFp):
+    for item in TITLE_LIST_MEMBER_ZC:
+        memberFp.write(item + ",")
+    memberFp.write("\n")
+    for key in memberDic.keys():
+        if memberDic[key].valid == 0:
+            continue
+        if memberDic[key].zc1TodoNum != 0 or memberDic[key].zc2TodoNum != 0:
+            memberFp.write(memberDic[key].name + ",")
+            memberFp.write(str(memberDic[key].zc1TodoNum) + ",")
+            memberFp.write(str(memberDic[key].zc2TodoNum) + ",")
+            memberFp.write("\n")
 
 def writeGroup(groupDic, groupFp):
     for item in TITLE_LIST_GROUP:
@@ -485,12 +535,20 @@ writeBugInfo(bugInfoList, hlBugFp)
 hlBugFp.close()
 
 bugAlarmFp = open("BUG推动.csv", "w")
-writeBugInfo(bugInfoList, bugAlarmFp, True)
+writeBugInfo(bugInfoList, bugAlarmFp, WRITE_TYPE_BUG)
 bugAlarmFp.close()
+
+zcAlarmFp = open("研发自查推动.csv", "w")
+writeBugInfo(bugInfoList, zcAlarmFp, WRITE_TYPE_ZC)
+zcAlarmFp.close()
 
 memberFp = open("人员统计.csv", "w")
 writeMember(memberDic, memberFp)
 memberFp.close()
+
+memberZcFp = open("研发自查推动人员统计.csv", "w")
+writeMemberZcNum(memberDic, memberZcFp)
+memberZcFp.close()
 
 groupFp = open("资源组统计.csv", "w")
 writeGroup(groupDic, groupFp)
