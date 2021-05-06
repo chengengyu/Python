@@ -7,6 +7,9 @@ import numpy   #计算工作日间隔使用
 # dateformat = "%Y/%m/%d %H:%M:%S"
 dateformat = "%Y/%m/%d"
 
+# 根据提出时间统计大于某年份的BUG
+YEAR_FILTER = 2021
+
 # 研发自查提醒门限
 ZC1_DIFF = 10
 ZC2_DIFF = 20
@@ -246,6 +249,8 @@ class BugInfoClass(object):
         else:
             if self.formerState == "重复的" or self.formerState == "无效的" or self.formerState == "待信息补充":
                 self.valid = False
+        if self.submitTime.year < YEAR_FILTER:
+            self.valid = False
         if self.modifyFinishTime == "" and self.type == "缺陷":
             self.bugAlarmFlag = True
 
