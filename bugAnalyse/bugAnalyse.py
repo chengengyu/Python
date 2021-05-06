@@ -253,6 +253,8 @@ class BugInfoClass(object):
             self.valid = False
         if self.modifyFinishTime == "" and self.type == "缺陷":
             self.bugAlarmFlag = True
+        if self.product == "":
+            self.valid = False
 
     def calcDiff(self):
         if self.assignTime:
