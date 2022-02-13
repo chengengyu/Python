@@ -8,7 +8,7 @@ import numpy   #计算工作日间隔使用
 dateformat = "%Y/%m/%d"
 
 # 根据提出时间统计大于某年份的BUG
-YEAR_FILTER = 2021
+YEAR_FILTER = 2020
 
 # 研发自查提醒门限
 ZC1_DIFF = 10
@@ -70,25 +70,25 @@ TITLE_LIST_MEMBER = [
 
 TITLE_LIST_MEMBER_ZC = [
     "姓名",
-    "内部版本研发自查待推动数（提出超过10天）",
-    "正式版本研发自查待推动数（提出超过22天）"
+    "内部版本研发自查待推动数(提出超过10天)",
+    "正式版本研发自查待推动数(提出超过22天)"
 ]
 
 TITLE_LIST_GROUP = [
     "组名/项目名",
     "CR个数",
     "BUG个数",
-    "待modifyFinish百分比",
-    "待resolve百分比",
-    "待关闭百分比",
-    "已关闭百分比",
+    "待modifyFinish个数",
+    "待resolve个数",
+    "待关闭个数",
+    "已关闭个数",
     "平均modifyFinish时长",
     "平均resolve时长",
     "平均关闭时长",
     "内部版本研发自查提出个数",
-    "内部版本研发自查待关闭百分比",
+    "内部版本研发自查待关闭个数",
     "正式版本研发自查提出个数",
-    "正式版本研发自查待关闭百分比",
+    "正式版本研发自查待关闭个数",
     "正式版本研发自查平均resolve时长",
     "正式版本研发自查平均关闭时长"
 ]
@@ -468,17 +468,17 @@ def writeGroup(groupDic, groupFp):
         groupFp.write(groupDic[key].group + ",")
         groupFp.write(str(groupDic[key].crNum) + ",")
         groupFp.write(str(groupDic[key].bugNum) + ",")
-        groupFp.write(str(groupDic[key].unModifyRatio) + ",")
-        groupFp.write(str(groupDic[key].tobeResolveRatio) + ",")
-        groupFp.write(str(groupDic[key].tobeCloseRatio) + ",")
-        groupFp.write(str(groupDic[key].closeRatio) + ",")
+        groupFp.write(str(groupDic[key].tobeModify) + ",")
+        groupFp.write(str(groupDic[key].tobeResolve) + ",")
+        groupFp.write(str(groupDic[key].tobeClose) + ",")
+        groupFp.write(str(groupDic[key].close) + ",")
         groupFp.write(str(groupDic[key].bugModifyTimeAverage) + ",")
         groupFp.write(str(groupDic[key].bugResolveTimeAverage) + ",")
         groupFp.write(str(groupDic[key].bugCloseTimeAverage) + ",")
         groupFp.write(str(groupDic[key].zc1Num) + ",")
-        groupFp.write(str(groupDic[key].zc1TobeCloseRatio) + ",")
+        groupFp.write(str(groupDic[key].zc1TobeCloseNum) + ",")
         groupFp.write(str(groupDic[key].zc2Num) + ",")
-        groupFp.write(str(groupDic[key].zc2TobeCloseRatio) + ",")
+        groupFp.write(str(groupDic[key].zc2TobeCloseNum) + ",")
         groupFp.write(str(groupDic[key].zc2ResolveTimeAverage) + ",")
         groupFp.write(str(groupDic[key].zc2CloseTimeAverage) + ",")
         groupFp.write("\n")
